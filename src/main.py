@@ -40,7 +40,7 @@ station.add_component(ppms)
 station.add_component(lockin)
 # ---------------------------------------------------------------------
 # %% Database
-initialise_or_create_database_at(r'D:\qcodesdb\experiment.db')
+initialise_or_create_database_at(r'C:\qcodesdb\experiment.db')
 qc.config.core.db_location
 # ---------------------------------------------------------------------
 # %% Experiment
