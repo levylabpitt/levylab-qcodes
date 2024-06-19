@@ -15,7 +15,7 @@ class MCLockin(ZMQInstrument):
     Class to represent the Multichannel Lock-in in LevyLab Instrument Framework
     This is a child class of ZMQInstrument, which is a child class of Instrument.
 
-    This driver talks to the PPMS Monitor and Control software via ZMQ.
+    This driver talks to the Multichannel Lock-in software via ZMQ.
 
     Args:
         name: The name used internally by QCoDeS for this driver
