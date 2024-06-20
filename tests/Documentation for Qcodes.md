@@ -2,7 +2,7 @@
 The `main.py` file is a sample python file where we have shown how to call "PPMS" and "Lock-in" instruments and perform a demo experiment using the package "Qcodes". In the following sections, the different parts of the code will be explained.
 
 ### Importing the Modules to perform the experiment
-At first, we are importing the necessary modules for performing the experiment. The following shows the associated python coding for importing the modules.
+At first, we are importing the necessary modules for performing the experiment:
 ````python
 #%% Imports
 import sys
@@ -31,7 +31,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 start_all_logging()
 ````
 ### Including the instruments and adding the parameters
-As next step, we are calling the two main instrument driver files- `PPMS.py` and `Lock-in.py` from the `levylabinst` package amd then, adding the necessary parameters along with instrument files. The associated code is given following:
+As next step, we are calling the two main instrument driver files- `PPMS.py` and `Lock-in.py` from the `levylabinst` package amd then, adding the necessary parameters along with instrument files:
 ````python 
 #%% Create the instrument objects
 from levylabinst import PPMSSim, MCLockin
@@ -43,7 +43,7 @@ lockin = MCLockin('lockin', lockin_address)
 # print(ppms._send_command('Get Magnet'))
 ````
 ### Making the station and adding the instruments
-Then, we instantiate a station and add the instruments in that station. The code is following:
+Then, we instantiate a station and add the instruments in that station:
 
 ````python
 # %% Station
@@ -119,10 +119,12 @@ experiments_widget(sort_by='run_id')
 ````
 # Heirarchy of the Qcodes
 Here we will summarize/understand the coding-sequences mentioned in the `main.py` file. At first, we will list the steps in the following:
-1. In the first step, we import the required modules. Then, we create the station and add the instruments in this station. Also, we create a database where the experimental data will be saved later.
+1. In the first step, we import the required modules. Alongside we create the station and add the instruments in this station. Also, we create a database where the experimental data will be saved later.
 2. As the second step, we load/create the experiment.
 3. For the third step, we register parameters for measurement and create measurement loop to conduct the experiment.
 4. Finally, we explore the dataset by plotting the results and using the `interactive_widget`.
+
+
 So, we can use the above mentioned points as the building blocks to make the heirarchy of the Qcodes operation. The Heirarchy is shown here following:
 
 ![Heirarchy](/docs/Heirarchy_2.png)
