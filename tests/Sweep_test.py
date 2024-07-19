@@ -27,11 +27,11 @@ start_all_logging()
 
 # ---------------------------------------------------------------------
 #%% Create the instrument objects
-from levylabinst import PPMSSim, MCLockin
+from levylabinst import PPMSSim, MCLockin2
 ppms_address = 'tcp://localhost:29270'
 lockin_address = 'tcp://localhost:29170'
 ppms = PPMSSim('ppms', ppms_address)
-lockin = MCLockin('lockin', lockin_address)
+lockin = MCLockin2('lockin', lockin_address)
 # ppms.field([1,5])
 # print(ppms._send_command('Get Magnet'))
 # ---------------------------------------------------------------------
@@ -51,13 +51,13 @@ test_exp = load_or_create_experiment('test_exp', sample_name='SimWaveguide')
 
 # %% do1d Measurement
 import IPython.lib.backgroundjobs as bg
-# from plottr.apps import inspectr
+from plottr.apps import inspectr
 
 jobs = bg.BackgroundJobManager()
-#jobs.new(inspectr.main, db_file_path)
+jobs.new(inspectr.main, db_file_path)
 
 # %% do1d Measurement
-do1d(lockin.gate, 0, 0.1, 500, 0.01, lockin.drain, measurement_name='do1d_measurement', exp=test_exp, write_period=0.1, show_progress=True, do_plot=True)
+do1d(lockin._gate_setter, 0, 0.1, 500, 0.01, lockin.drain, measurement_name='do1d_measurement', exp=test_exp, write_period=0.1, show_progress=True, do_plot=True) #lockin._gate_setter(channel no., sweeping voltage)
 
 # %% Explore Experiments and Datasets
 experiments()

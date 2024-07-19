@@ -10,7 +10,7 @@ import qcodes.validators as vals
 from qcodes.utils import DelayedKeyboardInterrupt
 import time
 
-class MCLockin(ZMQInstrument):
+class MCLockin2(ZMQInstrument):
     """
     Class to represent the Multichannel Lock-in in LevyLab Instrument Framework
     This is a child class of ZMQInstrument, which is a child class of Instrument.
@@ -38,7 +38,7 @@ class MCLockin(ZMQInstrument):
                            label='Gate Voltage',
                            unit='V',
                         #    vals=vals.Numbers(1.6, 400),
-                           set_cmd=self._gate_setter,
+                           set_cmd=self._gate_setter(AOvalue=6,value=2), #sweeping channel no. "" with gate voltage "" volt.
                            get_cmd=self._gate_getter)
         
         self.add_parameter('drain',
@@ -66,8 +66,8 @@ class MCLockin(ZMQInstrument):
     def _gate_getter(self):
         pass
 
-    def _gate_setter(self,value) -> None:
-        param = {'AO Channel': 2, 'DC (V)': value}
+    def _gate_setter(self,AOvalue,value) -> None:
+        param = {'AO Channel': AOvalue, 'DC (V)': value}
         self._send_command('setAO_DC', param)
 
     def _drain_getter(self):
