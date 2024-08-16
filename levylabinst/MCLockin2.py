@@ -38,7 +38,8 @@ class MCLockin2(ZMQInstrument):
                            label='Gate Voltage',
                            unit='V',
                         #    vals=vals.Numbers(1.6, 400),
-                           set_cmd=self._gate_setter(AOvalue=6,value=2), #sweeping channel no. "" with gate voltage "" volt.
+                           set_cmd=self._gate_channel_setter,
+                           set_cmd2= self._gate_voltage_setter, #sweeping channel no. "" with gate voltage "" volt.
                            get_cmd=self._gate_getter)
         
         self.add_parameter('drain',
@@ -66,9 +67,13 @@ class MCLockin2(ZMQInstrument):
     def _gate_getter(self):
         pass
 
-    def _gate_setter(self,AOvalue,value) -> None:
-        param = {'AO Channel': AOvalue, 'DC (V)': value}
+    def _gate_channel_setter(self,AOvalue) -> None:
+        param = {'AO Channel': AOvalue}
         self._send_command('setAO_DC', param)
+
+    def _gate_voltage_setter(self,GVvalue) -> None:
+        param = {'DC (V)': GVvalue}
+        self._send_command('DC (V)', param)    
 
     def _drain_getter(self):
         key = f"AI{self.drain_channel}.Mean" if self.drain_measurement == 'Mean' else f"AI{self.drain_channel}.Ref{self.drain_ref}.{self.drain_measurement}"

@@ -127,7 +127,9 @@ Here we will summarize/understand the coding-sequences mentioned in the `main.py
 
 So, we can use the above mentioned points as the building blocks to make the heirarchy of the Qcodes operation. The Heirarchy is shown here following:
 
-![Heirarchy](/docs/Heirarchy_2.png)
+![Heirarchy](\docs\Qcodes Heirarchy V1.png) 
+
+
 
 
 

@@ -41,7 +41,7 @@ station.add_component(ppms)
 station.add_component(lockin)
 # ---------------------------------------------------------------------
 # %% Database
-db_file_path = r'C:\qcodesdb\experiment.db'
+db_file_path = r'D:\qcodesdb\experimentn.db'
 initialise_or_create_database_at(db_file_path)
 qc.config.core.db_location
 # ---------------------------------------------------------------------
