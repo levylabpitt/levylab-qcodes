@@ -30,7 +30,7 @@ from levylabinst import PPMSSim, MCLockin
 ppms_address = 'tcp://localhost:29270'
 lockin_address = 'tcp://localhost:29170'
 ppms = PPMSSim('ppms', ppms_address)
-lockin = MCLockin('lockin', lockin_address)
+lockin = MCLockin('lockin', lockin_address, config={'source': 1, 'drain': 1, 'gate': 2})
 # ppms.field([1,5])
 # print(ppms._send_command('Get Magnet'))
 # ---------------------------------------------------------------------
@@ -50,8 +50,8 @@ test_exp = load_or_create_experiment('test_exp', sample_name='SimWaveguide')
 meas = Measurement(exp=test_exp, station=station, name='TestMeasurement')
 meas.register_parameter(ppms.temperature)
 meas.register_parameter(ppms.field)
-meas.register_parameter(lockin.gate)
-meas.register_parameter(lockin.drain, setpoints=(lockin.gate,)) # dependent parameter
+meas.register_parameter(lockin.gate_DC)
+meas.register_parameter(lockin.drain_X, setpoints=(lockin.gate_DC,)) # dependent parameter
 # ---------------------------------------------------------------------
 # %% Example Measurement Loop
 import time
@@ -60,15 +60,15 @@ with meas.run() as datasaver:
         ppms.temperature([temp, 50])
         for field in np.linspace(0, 0.1, 2):
             ppms.field([field, 2])
-            lockin.gate(0)
+            lockin.gate_DC(0)
             time.sleep(1)
             for gate in np.linspace(0, 0.1, 500):
-                lockin.gate(gate)
-                get_drain = lockin.drain()
+                lockin.gate_DC(gate)
+                get_drain = lockin.drain_X()
                 datasaver.add_result((ppms.temperature, temp),
                                      (ppms.field, field),
-                                     (lockin.gate, gate),
-                                     (lockin.drain, get_drain))
+                                     (lockin.gate_DC, gate),
+                                     (lockin.drain_X, get_drain))
 # ---------------------------------------------------------------------
 # %% Explore Experiments and Datasets
 experiments()

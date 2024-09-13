@@ -31,7 +31,7 @@ from levylabinst import PPMSSim, MCLockin
 ppms_address = 'tcp://localhost:29270'
 lockin_address = 'tcp://localhost:29170'
 ppms = PPMSSim('ppms', ppms_address)
-lockin = MCLockin('lockin', lockin_address)
+lockin = MCLockin('lockin', lockin_address, config={'source': 1, 'drain': 1, 'gate': 2})
 # ppms.field([1,5])
 # print(ppms._send_command('Get Magnet'))
 # ---------------------------------------------------------------------
@@ -57,7 +57,7 @@ jobs = bg.BackgroundJobManager()
 jobs.new(inspectr.main, db_file_path)
 
 # %% do1d Measurement
-do1d(lockin.gate, 0, 0.1, 500, 0.01, lockin.drain, measurement_name='do1d_measurement', exp=test_exp, write_period=0.1, show_progress=True, do_plot=True)
+do1d(lockin.gate_DC, 0, 0.1, 500, 0.01, lockin.drain_X, measurement_name='do1d_measurement', exp=test_exp, write_period=0.1, show_progress=True, do_plot=True)
 
 # %% Explore Experiments and Datasets
 experiments()
