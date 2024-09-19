@@ -5,7 +5,7 @@ from time import sleep
 from typing import Any, Callable, ClassVar, Literal, Optional, Union, cast
 import zmq
 import numpy as np
-from .ZMQInstrument import ZMQInstrument
+from ZMQInstrument import ZMQInstrument
 import qcodes.validators as vals
 from qcodes.utils import DelayedKeyboardInterrupt
 import time
@@ -87,7 +87,7 @@ class MCLockin(ZMQInstrument):
         self.add_parameter('state',
                             label='Lockin State',
                             unit='',
-                            vals=vals.Enum('start', 'start sweep', 'stop'),
+                            vals=vals.Enum('start', 'start sweep', 'stop sweep', 'stop'),
                             get_cmd=self._dump,
                             set_cmd=self._set_state)
             
@@ -168,11 +168,101 @@ class MCLockin(ZMQInstrument):
         submit_button = tk.Button(root, text="Submit", command=on_submit)
         submit_button.grid(row=1, column=1)
         submit_button.config(state=tk.DISABLED)  # Disable submit button initially
+    
+
+
+        # New button to prompt for additional channels
+        add_channel_button = tk.Button(root, text="Add New Channel", command=self.prompt_for_new_channel)
+        add_channel_button.grid(row=1, column=3)
+
+
 
         # Start the tkinter main loop
         root.mainloop()
 
         return config
+    
+
+
+    def add_channel(self, label: str, lead_number: int) -> None:
+        if label in self.config:
+            raise ValueError(f"Channel with label {label} already exists.")
+        
+        self.config[label] = lead_number
+        
+        self.add_parameter(f'{label}_Amp',
+                               label= f'{label} Amplitude',
+                               unit= 'V',
+                               vals= vals.Numbers(0, 100),
+                               get_cmd= self._dump,
+                               set_cmd= partial(self._set_amplitude, lead_number)
+                               )
+        
+        self.add_parameter(f'{label}_DC',
+                               label= f'{label} DC',
+                               unit= 'V',
+                               vals= vals.Numbers(0, 100),
+                               get_cmd= self._dump,
+                               set_cmd= partial(self._set_dc, lead_number)
+                               )
+        
+        self.add_parameter(f'{label}_Freq',
+                               label= f'{label} Frequency',
+                               unit= 'Hz',
+                               vals= vals.Numbers(0, 100),
+                               get_cmd= self._dump,
+                               set_cmd= partial(self._set_freq, lead_number)
+                               )
+        
+        self.add_parameter(f'{label}_Phase',
+                               label= f'{label} Phase',
+                               unit= 'deg',
+                               vals= vals.Numbers(0, 100),
+                               get_cmd= self._dump,
+                               set_cmd= partial(self._set_phase, lead_number)
+                               )
+        
+        self.add_parameter(f'{label}_Function',
+                               label= f'{label} Function',
+                               unit= '',
+                               vals= vals.Enum('Sine', 'Square', 'Triangle'),
+                               get_cmd= self._dump,
+                               set_cmd= partial(self._set_func, lead_number)
+                               )
+        
+    # to add one channel:
+    #def prompt_for_new_channel(self):
+    #    label= simpledialog.askstring("input", "Enter new channel label:")
+    #    lead_number = simpledialog.askinteger("Input", "Enter lead number:")
+    #    if label and lead_number is not None:
+    #        try:
+    #            self.add_channel(label, lead_number)
+    #        except ValueError as e:
+    #            messagebox.showerror("Error", str(e))
+
+    # to add multiple channel:
+    def prompt_for_new_channel(self):
+        num_channels = simpledialog.askinteger("Input", "Enter the number of channels to add:")
+        
+        if num_channels is None or num_channels <= 0:
+            messagebox.showerror("Error", "Invalid number of channels")
+            return
+        
+        for i in range(num_channels):
+            label= simpledialog.askstring("input", f"Enter label for channel {i+1}:")
+            lead_number = simpledialog.askinteger("Input", f"Enter lead number for channel {i+1}:")
+            if label and lead_number is not None:
+                try:
+                    self.add_channel(label, lead_number)
+                except ValueError as e:
+                    messagebox.showerror("Error", str(e))
+
+            else:
+                messagebox.showerror("Error", "Invalid input for channel label or lead number.")
+
+
+
+
     
     def get_idn(self) -> dict[str, Optional[str]]:
         """
@@ -221,8 +311,8 @@ class MCLockin(ZMQInstrument):
     def _set_sweepTime(self, value: float) -> None:
         param = value
         self._send_command('setSweepTime', param)
-
-    def _set_sweepconfig(self, channel: int, start: float, stop: float, sweep_time: float) -> None:
+        
+    def _set_sweepconfig(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float, ) -> None:
         '''
         Sets the sweep configuration for the lock-in
         Currently only supports one channel
@@ -233,16 +323,61 @@ class MCLockin(ZMQInstrument):
             sweep_time: The time of the sweep
             pattern: The pattern of the sweep
         '''
-        param = {"Sweep Time (s)":sweep_time,
-                 "Initial Wait (s)":1,
+        if pattern == "Table":
+           param = {"Sweep Time (s)":sweep_time,
+                 "Initial Wait (s)":initial_wait,
                  "Return to Start":False,
                  "Channels":[{"Enable?":True,
                               "Channel":channel,
                               "Start":start,
                               "End":stop,
-                              "Pattern": "Ramp /",
+                              "Pattern": pattern,
+                              "Table": [2,4,6,8]}]} 
+        else:
+            param = {"Sweep Time (s)":sweep_time,
+                 "Initial Wait (s)":initial_wait,
+                 "Return to Start":False,
+                 "Channels":[{"Enable?":True,
+                              "Channel":channel,
+                              "Start":start,
+                              "End":stop,
+                              "Pattern": pattern,
                               "Table":[]}]}      
         self._send_command('setSweep', param)
+    
+    # 
+
+
+
+   # Defining a function to acquire data from sweep
+    def _get_sweepdata(self):
+        '''
+        gets the sweep data after sweeping in lock-in
+        Args:
+          AO_wfm
+          signal out 
+          AI_wfm
+          signal out 
+          X_wfm
+          x
+          Y_wfm
+          y
+        '''
+        param = {"AO_wfm":["signal out"],
+                 "AI_wfm":["signal out"],
+                 "X_wfm":["x"],
+                 "Y_wfm":["y"],
+                 }
+        self._send_command('getSweepWaveforms', param)
+
+        #Defining the function to handle data
+        #def _handledata():'''
+
+
+
+
+
+    
 
 
 if __name__ == '__main__':
