@@ -255,6 +255,9 @@ class MCLockin(ZMQInstrument):
                               "Table":[]}]}      
         self._send_command('setSweep', param)
 
+    #def _handle_get_Xdata():
+    
+
 if __name__ == '__main__':
     """
     Test the Lockin class
@@ -263,3 +266,5 @@ if __name__ == '__main__':
     start_all_logging()
     lockin = MCLockin('lockin', 'tcp://localhost:29170')
     lockin.close()
+
+
