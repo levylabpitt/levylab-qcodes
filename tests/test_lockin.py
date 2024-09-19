@@ -12,6 +12,6 @@ lockin_address = 'tcp://localhost:29170'
 lockin = MCLockin('lockin', lockin_address, config=None)
 
 # %%
-lockin._set_sweepconfig(2,0.02,0.04,21)
-lockin.Drain_Amp(0.3)
+lockin._set_sweepconfig(1,0.04,0.09,"Ramp _/",4,30)
+#lockin.Drain_Amp(0.3)
 # %%

@@ -222,7 +222,7 @@ class MCLockin(ZMQInstrument):
         param = value
         self._send_command('setSweepTime', param)
 
-    def _set_sweepconfig(self, channel: int, start: float, stop: float, sweep_time: float) -> None:
+    def _set_sweepconfig(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
         '''
         Sets the sweep configuration for the lock-in
         Currently only supports one channel
@@ -233,17 +233,27 @@ class MCLockin(ZMQInstrument):
             sweep_time: The time of the sweep
             pattern: The pattern of the sweep
         '''
-        param = {"Sweep Time (s)":sweep_time,
-                 "Initial Wait (s)":1,
+        if pattern == "Table":
+           param = {"Sweep Time (s)":sweep_time,
+                 "Initial Wait (s)":initial_wait,
                  "Return to Start":False,
                  "Channels":[{"Enable?":True,
                               "Channel":channel,
                               "Start":start,
                               "End":stop,
-                              "Pattern": "Ramp /",
+                              "Pattern": pattern,
+                              "Table": [2,4,6,8]}]} 
+        else:
+            param = {"Sweep Time (s)":sweep_time,
+                 "Initial Wait (s)":initial_wait,
+                 "Return to Start":False,
+                 "Channels":[{"Enable?":True,
+                              "Channel":channel,
+                              "Start":start,
+                              "End":stop,
+                              "Pattern": pattern,
                               "Table":[]}]}      
         self._send_command('setSweep', param)
-
 
 if __name__ == '__main__':
     """
