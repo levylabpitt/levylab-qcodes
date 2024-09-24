@@ -214,6 +214,10 @@ class MCLockin(ZMQInstrument):
         results_dict = {item['key']: item['value'] for item in results}
         return results_dict.get(key)
     
+    def _get_sweep_data(self) -> dict: #this function will get the data from the lockin afte sweeping is done. It is based on the API "getsweepdata.VI". All the data from labview are being stored as dictionary (dict).
+        response = self._send_command('getSweepWaveforms')
+        return response
+    
     def _set_state(self, value: str) -> None:
         param = value
         self._send_command('setState', param)

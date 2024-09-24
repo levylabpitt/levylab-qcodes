@@ -4,38 +4,56 @@ import json
 import qcodes as qc
 import os
 import numpy as np
+import pandas as pd
 import time
 import matplotlib.pyplot as plt
+import seaborn as sns
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 #%% Create the instrument objects
 from levylabinst import MCLockin
 lockin_address = 'tcp://localhost:29170'
-lockin = MCLockin('lockin', lockin_address, config=None)
+lockin = MCLockin('lockin', lockin_address, config={"source":1})
 
-# %%
-lockin._set_sweepconfig(2,0.04,0.09,"Ramp /",4,10)
+# %%defining functions
+lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",5,9)
 lockin._set_state('start sweep')
-Xresults = [] #To store the values of Xresults while sweeping
+time.sleep(12) #To make sure, the sweeping is done completely. The sleep time is more than sweeping time.
+data=lockin._get_sweep_data() 
 
-#running the while loop for the given sweeptime and storing the X-values in the Xresults
-t_end = time.time() + 10 #sweeptime = 5s
-while time.time() < t_end: 
-    d = lockin.source_X()
-    Xresults.append(d)
+#%%Making into a csv file
+#sdata= pd.DataFrame(data)
 
-#determining the length for Xresults and made an array
-l = len(Xresults) 
-Xlist = np.linspace(1,l,l)
-         
-Xarray = np.array(Xlist) 
+# %%Saving data into .csv files
+#sdata.to_csv('sweep dataset.csv', index=False)
+#print(data) 
 
-#Plotting the Xresults 
-plt.plot(Xarray, Xresults, marker='o')
-plt.xlabel('points')
-plt.ylabel('Sweep Results X(V)')
+# %%Extract the "AI_wfm" array
+ai_array = data['result']['AI_wfm'][0]['Y']
+
+# %%Convert to DataFrame
+dfai = pd.DataFrame(ai_array, columns=['Y'])
+
+
+# %%Extract the "AO_wfm" array
+ao_array = data['result']['AO_wfm'][0]['Y']
+
+# %%Convert to DataFrame
+dfao = pd.DataFrame(ao_array, columns=['Y'])
+
+# %%Extract the "X_wfm" array
+x_array = data['result']['X_wfm'][0]['Y']
+
+# %%Convert to DataFrame
+dfx = pd.DataFrame(x_array, columns=['Y'])
+
+# %%Display the DataFrame
+#print(df)
+
+# %% Plotting AO_wfm
+plt.plot(dfai['Y'])
+plt.title('Waveform Data')
+plt.xlabel('Index')
+plt.ylabel('Amplitude')
 plt.show()
-
-
-#lockin.Drain_Amp(0.3)
-# %%
