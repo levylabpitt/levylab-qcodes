@@ -3,6 +3,7 @@ import warnings
 from functools import partial
 from time import sleep
 from typing import Any, Callable, ClassVar, Literal, Optional, Union, cast
+from matplotlib.pylab import set_state
 import zmq
 import numpy as np
 from .ZMQInstrument import ZMQInstrument
@@ -87,8 +88,8 @@ class MCLockin(ZMQInstrument):
         self.add_parameter('state',
                             label='Lockin State',
                             unit='',
-                            vals=vals.Enum('start', 'start sweep', 'stop'),
-                            get_cmd=self._dump,
+                            vals=vals.Enum('start', 'start sweep', 'stop', 'stop sweep'),
+                            get_cmd=self._get_state,
                             set_cmd=self._set_state)
             
         # self.print_readable_snapshot(update=True)
@@ -218,6 +219,10 @@ class MCLockin(ZMQInstrument):
         response = self._send_command('getSweepWaveforms')
         return response
     
+    def _get_state(self) -> dict:
+        response = self._send_command('getState')
+        return response['result']
+    
     def _set_state(self, value: str) -> None:
         param = value
         self._send_command('setState', param)
@@ -225,6 +230,7 @@ class MCLockin(ZMQInstrument):
     def _set_sweepTime(self, value: float) -> None:
         param = value
         self._send_command('setSweepTime', param)
+
 
     def _set_sweepconfig(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
         '''
@@ -259,8 +265,6 @@ class MCLockin(ZMQInstrument):
                               "Table":[]}]}      
         self._send_command('setSweep', param)
 
-    #def _handle_get_Xdata():
-    
 
 if __name__ == '__main__':
     """

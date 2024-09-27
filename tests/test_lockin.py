@@ -16,11 +16,50 @@ from levylabinst import MCLockin
 lockin_address = 'tcp://localhost:29170'
 lockin = MCLockin('lockin', lockin_address, config={"source":1})
 
-# %%defining functions
-lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",5,9)
-lockin._set_state('start sweep')
-time.sleep(12) #To make sure, the sweeping is done completely. The sleep time is more than sweeping time.
-data=lockin._get_sweep_data() 
+#%% If condition approach
+'''def start_sweep():
+    lockin._set_state('start sweep')
+    return True
+'''
+'''
+lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",6,10)
+start_sweep()
+sweep_completed = False
+while not sweep_completed:
+    sweep_completed = start_sweep()
+
+    if sweep_completed:
+        data = lockin._get_sweep_data()
+    else:
+        print("Sweep not completed, waiting...")
+        time.sleep(1)
+
+    '''
+
+# %%Sweep started
+lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",6,10)
+lockin.state('start sweep')
+# lockin.state('stop sweep')
+
+'''
+1. check for the lockin status (if idle, then start/if sweeping, abort the request)
+2. set config
+3. start the sweep
+3*. function to do real-time plotting (real_time_plotting)
+4. wait for the duration of the sweep (initial wait + sweep time)
+5. query the lock-in status to check whether the sweep is stopped
+6. return the results
+
+def real_time_plotting(self, refresh time):
+    query for the data with a given refresh time and plot the results as the sweep is going on.
+'''
+
+
+#time.sleep(32) #Wait for sweeping stop= (Initial time + Sweeptime)*2 
+#while not result:
+
+     
+#data = lockin._get_sweep_data() #data acquisition
 
 #%%Making into a csv file
 #sdata= pd.DataFrame(data)
@@ -29,31 +68,90 @@ data=lockin._get_sweep_data()
 #sdata.to_csv('sweep dataset.csv', index=False)
 #print(data) 
 
+##data organizing
+
 # %%Extract the "AI_wfm" array
-ai_array = data['result']['AI_wfm'][0]['Y']
+ai_arrays = [entry['Y'] for entry in data['result']['AI_wfm']]
 
-# %%Convert to DataFrame
-dfai = pd.DataFrame(ai_array, columns=['Y'])
+#%% Convert to DataFrame
+dfai = pd.DataFrame(ai_arrays).transpose()
 
+#%%Printing the data
+print(dfai)
+
+#%%Saving the data
+AIdata = dfai.to_csv('Sweep AI data.csv')
 
 # %%Extract the "AO_wfm" array
-ao_array = data['result']['AO_wfm'][0]['Y']
+ao_array = [entry['Y'] for entry in data['result']['AO_wfm']]
 
 # %%Convert to DataFrame
-dfao = pd.DataFrame(ao_array, columns=['Y'])
+dfao = pd.DataFrame(ao_array).transpose()
+
+#%%Printing the data
+print(dfao)
+
+#%%Saving the data
+AOdata = dfao.to_csv('Sweep AO data.csv')
 
 # %%Extract the "X_wfm" array
-x_array = data['result']['X_wfm'][0]['Y']
+x_array = [entry['Y'] for entry in data['result']['X_wfm']]
 
 # %%Convert to DataFrame
-dfx = pd.DataFrame(x_array, columns=['Y'])
+dfx = pd.DataFrame(x_array).transpose()
 
-# %%Display the DataFrame
-#print(df)
+#%%Printing the data
+print(dfx)
+
+#%%Saving the data
+Xdata = dfx.to_csv('Sweep X data.csv')
+
+# %%Extract the "Y_wfm" array
+y_array = [entry['Y'] for entry in data['result']['Y_wfm']]
+
+# %%Convert to DataFrame
+dfy = pd.DataFrame(y_array).transpose()
+
+#%% Printing dfy
+print(dfy)
+
+#%%Saving the data
+Ydata = dfy.to_csv('Sweep Y data.csv')
 
 # %% Plotting AO_wfm
-plt.plot(dfai['Y'])
-plt.title('Waveform Data')
-plt.xlabel('Index')
-plt.ylabel('Amplitude')
+plt.plot(dfao)
+plt.title('Sweep AO')
+plt.xlabel('Samples')
+plt.ylabel('Sweep AO (V)')
 plt.show()
+plt.savefig("Sweep AO.png", dpi=500)
+
+# %% Plotting AI_wfm
+plt.plot(dfai)
+plt.title('Sweep AI')
+plt.xlabel('Samples')
+plt.ylabel('Sweep AI (V)')
+plt.show()
+plt.savefig("Sweep AI.png", dpi=500)
+
+
+# %% Plotting X_wfm
+plt.plot(dfx)
+plt.title('Sweep X')
+plt.xlabel('Samples')
+plt.ylabel('Sweep X Results (V)')
+plt.show()
+plt.savefig("Sweep X.png", dpi=500)
+
+
+# %%Plotting Y_wfm
+plt.plot(dfy)
+plt.title('Sweep Y')
+plt.xlabel('Samples')
+plt.ylabel('Sweep Y Results (V)')
+plt.show()
+plt.savefig("Sweep Y.png", dpi=500)
+
+
+
+# %%
