@@ -16,30 +16,7 @@ from levylabinst import MCLockin
 lockin_address = 'tcp://localhost:29170'
 lockin = MCLockin('lockin', lockin_address, config={"source":1})
 
-#%% If condition approach
-'''def start_sweep():
-    lockin._set_state('start sweep')
-    return True
-'''
-'''
-lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",6,10)
-start_sweep()
-sweep_completed = False
-while not sweep_completed:
-    sweep_completed = start_sweep()
-
-    if sweep_completed:
-        data = lockin._get_sweep_data()
-    else:
-        print("Sweep not completed, waiting...")
-        time.sleep(1)
-
-    '''
-
-# %%Sweep started
-
-#lockin.state('start sweep')
-
+# %% Psuedo code for sweep checking
 
 '''
 1. check for the lockin status (if idle, then start/if sweeping, abort the request)
@@ -54,7 +31,13 @@ def real_time_plotting(self, refresh time):
     query for the data with a given refresh time and plot the results as the sweep is going on.
 '''
 
-#%% Sweeping
+#%% Sweeping Process
+
+#For X (V) and Y (V) plotting
+
+XV = []
+YV = []
+
 
 #Check lock-in status
 lockin.state()
@@ -68,40 +51,27 @@ lockin._set_state('start sweep')
 #Wait for the sweep duration
 time.sleep(9)
 
+#acquiring X (V) and Y (V) while sweeping duration
+
 #To check whether Sweeping is completed or not
 
 print(lockin.state())
 while lockin.state() == 'sweeping':
     time.sleep(0.5)
 
-# while status:
-#    if status == 'sweeping':
-#        print('still sweeping')
-#        time.sleep(1)
-#    else:
-#       print("Sweep completed")
-#       status = False
-
 print('sweep completed')
-print(lockin.state())  #verification   
+print(lockin.state())  #verification of sweep completion 
 
+print(XV)
 
 #%% Acquiring data
 data = lockin._get_sweep_data()
 
-#sdata= pd.DataFrame(data)
-
-# %%Saving data into .csv files
-#sdata.to_csv('sweep dataset.csv', index=False)
-#print(data) 
-
-##data organizing
-
 # %%Extract the "AI_wfm" array
-ai_arrays = [entry['Y'] for entry in data['result']['AI_wfm']]
+ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
 
 #%% Convert to DataFrame
-dfai = pd.DataFrame(ai_arrays).transpose()
+dfai = pd.DataFrame(ai_array).transpose()
 
 #%%Printing the data
 print(dfai)
