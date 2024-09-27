@@ -37,9 +37,9 @@ while not sweep_completed:
     '''
 
 # %%Sweep started
-lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",6,10)
-lockin.state('start sweep')
-# lockin.state('stop sweep')
+
+#lockin.state('start sweep')
+
 
 '''
 1. check for the lockin status (if idle, then start/if sweeping, abort the request)
@@ -54,14 +54,41 @@ def real_time_plotting(self, refresh time):
     query for the data with a given refresh time and plot the results as the sweep is going on.
 '''
 
+#%% Sweeping
 
-#time.sleep(32) #Wait for sweeping stop= (Initial time + Sweeptime)*2 
-#while not result:
+#Check lock-in status
+lockin.state()
 
-     
-#data = lockin._get_sweep_data() #data acquisition
+#sweep configuration
+lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",4,5)
 
-#%%Making into a csv file
+#start sweeping
+lockin._set_state('start sweep')
+
+#Wait for the sweep duration
+time.sleep(9)
+
+#To check whether Sweeping is completed or not
+
+print(lockin.state())
+while lockin.state() == 'sweeping':
+    time.sleep(0.5)
+
+# while status:
+#    if status == 'sweeping':
+#        print('still sweeping')
+#        time.sleep(1)
+#    else:
+#       print("Sweep completed")
+#       status = False
+
+print('sweep completed')
+print(lockin.state())  #verification   
+
+
+#%% Acquiring data
+data = lockin._get_sweep_data()
+
 #sdata= pd.DataFrame(data)
 
 # %%Saving data into .csv files
