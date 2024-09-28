@@ -5,13 +5,25 @@ from time import sleep
 from typing import Any, Callable, ClassVar, Literal, Optional, Union, cast
 import zmq
 import numpy as np
-from ZMQInstrument import ZMQInstrument
+import os   # Check if the config file exists
+from .ZMQInstrument import ZMQInstrument
 import qcodes.validators as vals
 from qcodes.utils import DelayedKeyboardInterrupt
 import time
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 from typing import Any, Dict
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+class ConfigChangeHandler(FileSystemEventHandler):
+    def __init__(self, lockin_instance):
+        self.lockin_instance = lockin_instance
+
+    def on_modified(self, event):
+        if event.src_path.endswith(self.lockin_instance.config_file):
+            print(f"Detected changes in {self.lockin_instance.config_file}, reloading config ...")
+            self.lockin_instance.reload_config()
 
 class MCLockin(ZMQInstrument):
     """
@@ -28,53 +40,50 @@ class MCLockin(ZMQInstrument):
             E.g. {'Ip': 1, 'Im': 2, 'Vp': 3, 'Vm': 4}
     """
 
-    def __init__(self, name: str, address: str, config:dict, **kwargs: Any) -> None:
+    def __init__(self, name: str, address: str, config_file: str = 'experiment.config.json', **kwargs: Any) -> None:
         super().__init__(name=name, address=address,**kwargs)
-        if config is None:
-            config = self._get_config_from_gui()
-
-        self.config = config
-        # Define the parameters for the lock-in experiment (specific to the experiment)
-        # self.drain_channel = 1
-        # self.drain_ref = 1
-        # self.drain_measurement = 'X'
+        self.config_file = config_file
+        self.config = self._get_config_from_file(config_file)
         self._ref_channel = 1
 
-        for label, value in config.items():
+        # Start the file watcher for the config file
+        self.start_file_watcher()
+
+        for label, value in self.config['lockin_config_info'].items():
             self.add_parameter(f'{label}_Amp',
                                label=f'{label} Amplitude',
                                unit='V',
                                vals=vals.Numbers(0, 100),
                                get_cmd=self._dump,
-                               set_cmd=partial(self._set_amplitude, config[label]))
+                               set_cmd=partial(self._set_amplitude, value))
             
             self.add_parameter(f'{label}_DC',
                                label=f'{label} DC',
                                unit='V',
                                vals=vals.Numbers(0, 100),
                                get_cmd=self._dump,
-                               set_cmd=partial(self._set_dc, config[label]))
+                               set_cmd=partial(self._set_dc, value))
             
             self.add_parameter(f'{label}_Freq',
                                label=f'{label} Frequency',
                                unit='Hz',
                                vals=vals.Numbers(0, 100),
                                get_cmd=self._dump,
-                               set_cmd=partial(self._set_freq, config[label]))
+                               set_cmd=partial(self._set_freq, value))
             
             self.add_parameter(f'{label}_Phase',
                                label=f'{label} Phase',
                                unit='deg',
                                vals=vals.Numbers(0, 100),
                                get_cmd=self._dump,
-                               set_cmd=partial(self._set_phase, config[label]))
+                               set_cmd=partial(self._set_phase, value))
             
             self.add_parameter(f'{label}_Function',
                                label=f'{label} Function',
                                unit='',
                                vals=vals.Enum('Sine', 'Square', 'Triangle'),
                                get_cmd=self._dump,
-                               set_cmd=partial(self._set_func, config[label]))
+                               set_cmd=partial(self._set_func, value))
             
             Measurements = ['X', 'Y', 'R', 'Theta', 'Mean']
             for measurement in Measurements:
@@ -82,7 +91,7 @@ class MCLockin(ZMQInstrument):
                 self.add_parameter(f'{label}_{measurement}',
                                    label=f'{label} {measurement}',
                                    unit=meas_unit,
-                                   get_cmd=partial(self._get_lockin, measurement, config[label]))
+                                   get_cmd=partial(self._get_lockin, measurement, value))
             
         self.add_parameter('state',
                             label='Lockin State',
@@ -94,174 +103,215 @@ class MCLockin(ZMQInstrument):
         # self.print_readable_snapshot(update=True)
         self.connect_message()
 
-    def _get_config_from_gui(self) -> Dict[str, int]:
+    def reset_parameters(self):
         """
-        Opens a GUI to prompt the user for channel configuration.
+        Reset defined channel parameters in JSON to default values:
+        - Amplitude: 0 V
+        - DC: 0 V
+        - Frequency: 0 Hz
+        - Phase: 0 degrees
+        - Function: Sine
+        """
+        default_values = {
+            'Amp': 0,
+            'DC': 0,
+            'Freq': 0,
+            'Phase': 0,
+            'Function': 'Sine'
+        }
+
+        for label, value in self.config['lockin_config_info'].items():
+            self.set(f'{label}_Amp', default_values['Amp'])
+            self.set(f'{label}_DC', default_values['DC'])
+            self.set(f'{label}_Freq', default_values['Freq'])
+            self.set(f'{label}_Phase', default_values['Phase'])
+            self.set(f'{label}_Function', default_values['Function'])
+
+        print("Parameters for defined channels have been reset to default values.")
+
+    def reset_all_parameters(self) -> None:
+        """
+        Reset all 8 channels to default values:
+        Amplitude = 0 V, DC = 0 V, Frequency = 0 Hz, Phase = 0 degrees, Function = Sine.
+        """
+        default_values = {
+            'Amplitude (V)': 0,
+            'DC (V)': 0,
+            'Frequency (Hz)': 0,
+            'Phase (deg)': 0,
+            'Function': 'Sine'
+        }
+
+        # Reset parameters for all 8 channels (channel numbers 1 to 8)
+        for channel in range(1, 9):
+            self._send_command('setAO_Amplitude', {'AO Channel': channel, 'Amplitude (V)': default_values['Amplitude (V)']})
+            self._send_command('setAO_DC', {'AO Channel': channel, 'DC (V)': default_values['DC (V)']})
+            self._send_command('setAO_Frequency', {'AO Channel': channel, 'Frequency (Hz)': default_values['Frequency (Hz)']})
+            self._send_command('setAO_Phase', {'AO Channel': channel, 'Phase (deg)': default_values['Phase (deg)']})
+            self._send_command('setAO_Function', {'AO Channel': channel, 'Function': default_values['Function']})
+
+        print("All 8 channels have been reset to default values.")
+
+    def reload_config(self):
+        """
+        Reload the configuration from the JSON file and update channels.
+        """
+        try:
+            new_config = self._get_config_from_file(self.config_file)
+
+            existing_channels = set(self.config['lockin_config_info'].keys())
+            new_channels = set(new_config['lockin_config_info'].keys())
+
+            for channel in existing_channels - new_channels:
+                del self.parameters[f'{channel}_Amp']
+                del self.parameters[f'{channel}_DC']
+                del self.parameters[f'{channel}_Freq']
+                del self.parameters[f'{channel}_Phase']
+                del self.parameters[f'{channel}_Function']
+
+            for channel in new_channels & existing_channels:
+                del self.parameters[f'{channel}_Amp']
+                del self.parameters[f'{channel}_DC']
+                del self.parameters[f'{channel}_Freq']
+                del self.parameters[f'{channel}_Phase']
+                del self.parameters[f'{channel}_Function']
+
+            #for channel in new_channels - existing_channels:
+            #    self.add_channel(channel, new_config['lockin_config_info'][channel])
+
+            #for channel in existing_channels - new_channels:
+            #    self.remove_channel(channel)
+
+            self.config = new_config
+
+            # Reinitialize parameters
+            for label, value in self.config['lockin_config_info'].items():
+                self.add_parameter(f'{label}_Amp',
+                               label=f'{label} Amplitude',
+                               unit='V',
+                               vals=vals.Numbers(0, 100),
+                               get_cmd=self._dump,
+                               set_cmd=partial(self._set_amplitude, value))
+            
+                self.add_parameter(f'{label}_DC',
+                               label=f'{label} DC',
+                               unit='V',
+                               vals=vals.Numbers(0, 100),
+                               get_cmd=self._dump,
+                               set_cmd=partial(self._set_dc, value))
+            
+                self.add_parameter(f'{label}_Freq',
+                               label=f'{label} Frequency',
+                               unit='Hz',
+                               vals=vals.Numbers(0, 100),
+                               get_cmd=self._dump,
+                               set_cmd=partial(self._set_freq, value))
+            
+                self.add_parameter(f'{label}_Phase',
+                               label=f'{label} Phase',
+                               unit='deg',
+                               vals=vals.Numbers(0, 100),
+                               get_cmd=self._dump,
+                               set_cmd=partial(self._set_phase, value))
+            
+                self.add_parameter(f'{label}_Function',
+                               label=f'{label} Function',
+                               unit='',
+                               vals=vals.Enum('Sine', 'Square', 'Triangle'),
+                               get_cmd=self._dump,
+                               set_cmd=partial(self._set_func, value))
+
+            print("Config reloaded successfully.")
+        except Exception as e:
+            print(f"Failed to reload configuration: {e}")
+
+    def start_file_watcher(self):
+        """
+        Start watching {self.config_file} for changes.
+        """
+
+        event_handler = ConfigChangeHandler(self)
+        observer = Observer()
+        config_dir = os.path.dirname(os.path.abspath(self.config_file))
+        observer.schedule(event_handler, path= config_dir, recursive= False)
+        observer.start()
+        print(f"Started watching {self.config_file} for changes.")
+        # Run the observer in a separate thread to avoid blocking
+        import threading
+        threading.Thread(target=observer.join).start()
+
+    def _get_config_from_file(self, config_file: str) -> Dict[str, int]:
+        """
+        Reads configuration from an external JSON file.
+
         Returns:
             config (dict): A dictionary with labels as keys and lead numbers as values.
         """
-        config = {}
+        if not os.path.exists(config_file):
+            raise FileNotFoundError(f"{config_file} not found. Please provide the correct path.")
 
-        # Create the tkinter root window
-        root = tk.Tk()
-        root.title("Channel Configuration")
-
-        label_entries = []
-        lead_entries = []
-        
-        def generate_fields():
-            nonlocal label_entries, lead_entries
-            # Clear any previous entries if they exist
-            for widget in root.grid_slaves():
-                if int(widget.grid_info()["row"]) > 1:
-                    widget.grid_forget()
-
-            try:
-                # Get the number of channels
-                num_channels = int(num_channels_entry.get())
-
-                # Create new input fields based on the number of channels
-                label_entries = []
-                lead_entries = []
-
-                for i in range(num_channels):
-                    # Create label and entry for each channel's label
-                    tk.Label(root, text=f"Channel {i + 1} Label:").grid(row=i + 2, column=0)
-                    label_entry = tk.Entry(root)
-                    label_entry.grid(row=i + 2, column=1)
-                    label_entries.append(label_entry)
-
-                    # Create label and entry for each channel's lead number
-                    tk.Label(root, text=f"Channel {i + 1} Lead Number:").grid(row=i + 2, column=2)
-                    lead_entry = tk.Entry(root)
-                    lead_entry.grid(row=i + 2, column=3)
-                    lead_entries.append(lead_entry)
-
-                # Enable the submit button after fields are generated
-                submit_button.config(state=tk.NORMAL)
-
-            except ValueError:
-                messagebox.showerror("Input Error", "Please enter a valid integer for the number of channels.")
-        
-        def on_submit():
-            try:
-                for i in range(len(label_entries)):
-                    label = label_entries[i].get()
-                    lead_number = int(lead_entries[i].get())
-                    config[label] = lead_number
-                root.destroy()  # Close the GUI window after submitting
-            except ValueError:
-                messagebox.showerror("Input Error", "Lead numbers must be integers.")
-
-        # Instruction Label
-        tk.Label(root, text="Enter the number of channels:").grid(row=0, column=0)
-
-        # Entry field for the number of channels
-        num_channels_entry = tk.Entry(root)
-        num_channels_entry.grid(row=0, column=1)
-
-        # Button to generate input fields
-        generate_button = tk.Button(root, text="Generate Fields", command=generate_fields)
-        generate_button.grid(row=0, column=2)
-
-        # Submit button (initially disabled, enabled after fields are generated)
-        submit_button = tk.Button(root, text="Submit", command=on_submit)
-        submit_button.grid(row=1, column=1)
-        submit_button.config(state=tk.DISABLED)  # Disable submit button initially
-    
-
-
-        # New button to prompt for additional channels
-        add_channel_button = tk.Button(root, text="Add New Channel", command=self.prompt_for_new_channel)
-        add_channel_button.grid(row=1, column=3)
-
-
-
-        # Start the tkinter main loop
-        root.mainloop()
+        with open(config_file, 'r') as file:
+            config = json.load(file)
 
         return config
     
+    def dashboard(self):
+        """
+        Launches a dashboard where the user can view existing channels, 
+        add new channels, 
+        delete channels,
+        and view experiment info.
+        """
+        # Load information from the config file
+        config_data = self._get_config_from_file(self.config_file)
+        wirebonding_info = config_data.get('wirebonding_info', 'No info available')
+        krohn_hite_info = config_data.get('krohn_hite_info', 'No info available')
+        experiment_note_info = config_data.get('experiment_note_info', 'No info available')
+        
+        # Create the dashboard window
+        dashboard = tk.Tk()
+        dashboard.title("Experiment Dashboard")
 
+        # Function to update the dashboard with the current channels and additional info
+        def update_dashboard():
+            
+            #Clear all existing widgets from the window before refreshing
+            for widget in dashboard.grid_slaves():
+                widget.grid_forget()
 
-    def add_channel(self, label: str, lead_number: int) -> None:
-        if label in self.config:
-            raise ValueError(f"Channel with label {label} already exists.")
-        
-        self.config[label] = lead_number
-        
-        self.add_parameter(f'{label}_Amp',
-                               label= f'{label} Amplitude',
-                               unit= 'V',
-                               vals= vals.Numbers(0, 100),
-                               get_cmd= self._dump,
-                               set_cmd= partial(self._set_amplitude, lead_number)
-                               )
-        
-        self.add_parameter(f'{label}_DC',
-                               label= f'{label} DC',
-                               unit= 'V',
-                               vals= vals.Numbers(0, 100),
-                               get_cmd= self._dump,
-                               set_cmd= partial(self._set_dc, lead_number)
-                               )
-        
-        self.add_parameter(f'{label}_Freq',
-                               label= f'{label} Frequency',
-                               unit= 'Hz',
-                               vals= vals.Numbers(0, 100),
-                               get_cmd= self._dump,
-                               set_cmd= partial(self._set_freq, lead_number)
-                               )
-        
-        self.add_parameter(f'{label}_Phase',
-                               label= f'{label} Phase',
-                               unit= 'deg',
-                               vals= vals.Numbers(0, 100),
-                               get_cmd= self._dump,
-                               set_cmd= partial(self._set_phase, lead_number)
-                               )
-        
-        self.add_parameter(f'{label}_Function',
-                               label= f'{label} Function',
-                               unit= '',
-                               vals= vals.Enum('Sine', 'Square', 'Triangle'),
-                               get_cmd= self._dump,
-                               set_cmd= partial(self._set_func, lead_number)
-                               )
-        
-    # to add one channel:
-    #def prompt_for_new_channel(self):
-    #    label= simpledialog.askstring("input", "Enter new channel label:")
-    #    lead_number = simpledialog.askinteger("Input", "Enter lead number:")
-    #    if label and lead_number is not None:
-    #        try:
-    #            self.add_channel(label, lead_number)
-    #        except ValueError as e:
-    #            messagebox.showerror("Error", str(e))
+            # Display the existing channels in the config
+            tk.Label(dashboard, text="Existing Channels:").grid(row=0, column=0, columnspan=2)
 
-    # to add multiple channel:
-    def prompt_for_new_channel(self):
-        num_channels = simpledialog.askinteger("Input", "Enter the number of channels to add:")
-        
-        if num_channels is None or num_channels <= 0:
-            messagebox.showerror("Error", "Invalid number of channels")
-            return
-        
-        for i in range(num_channels):
-            label= simpledialog.askstring("input", f"Enter label for channel {i+1}:")
-            lead_number = simpledialog.askinteger("Input", f"Enter lead number for channel {i+1}:")
-            if label and lead_number is not None:
-                try:
-                    self.add_channel(label, lead_number)
-                except ValueError as e:
-                    messagebox.showerror("Error", str(e))
+            row = 1
+            for label, lead_number in self.config['lockin_config_info'].items():
+                tk.Label(dashboard, text=f"Channel {label}:").grid(row=row, column=0)
+                tk.Label(dashboard, text=f"Lead Number {lead_number}").grid(row=row, column=1)
+                row += 1
 
-            else:
-                messagebox.showerror("Error", "Invalid input for channel label or lead number.")
+            # Display wirebonding details
+            tk.Label(dashboard, text="WireBonding Info:").grid(row=row, column=0, sticky="w")
+            tk.Label(dashboard, text=wirebonding_info).grid(row=row, column=1, sticky="w")
+            row += 1
 
+            # Display krohn-hite details
+            tk.Label(dashboard, text="Krohn-Hite Info:").grid(row=row, column=0, sticky="w")
+            tk.Label(dashboard, text=krohn_hite_info).grid(row=row, column=1, sticky="w")
+            row += 1
 
+            # Display experiment notes
+            tk.Label(dashboard, text="Experiment Note:").grid(row=row, column=0, sticky="w")
+            tk.Label(dashboard, text=experiment_note_info).grid(row=row, column=1, sticky="w")
+            row += 1
 
+            # OK button to close the dashboard
+            ok_button = tk.Button(dashboard, text="OK", command=dashboard.destroy)
+            ok_button.grid(row=row + 1, column=0, columnspan=2)
+
+        # Initially update the dashboard when the window is created
+        update_dashboard()
+
+        # Start the dashboard main loop
+        dashboard.mainloop()
 
     
     def get_idn(self) -> dict[str, Optional[str]]:
@@ -274,6 +324,7 @@ class MCLockin(ZMQInstrument):
             "serial": None,
             "firmware": "v2.15.4.4",
         }
+    
     def _dump(self):
         pass
 
@@ -345,46 +396,16 @@ class MCLockin(ZMQInstrument):
                               "Table":[]}]}      
         self._send_command('setSweep', param)
     
-    # 
-
-
-
-   # Defining a function to acquire data from sweep
-    def _get_sweepdata(self):
-        '''
-        gets the sweep data after sweeping in lock-in
-        Args:
-          AO_wfm
-          signal out 
-          AI_wfm
-          signal out 
-          X_wfm
-          x
-          Y_wfm
-          y
-        '''
-        param = {"AO_wfm":["signal out"],
-                 "AI_wfm":["signal out"],
-                 "X_wfm":["x"],
-                 "Y_wfm":["y"],
-                 }
-        self._send_command('getSweepWaveforms', param)
-
-        #Defining the function to handle data
-        #def _handledata():'''
-
-
-
-
-
-    
-
-
+ 
 if __name__ == '__main__':
     """
     Test the Lockin class
     """
     from qcodes.logger import start_all_logging
     start_all_logging()
-    lockin = MCLockin('lockin', 'tcp://localhost:29170')
+    print("Starting MCLockin...")
+    lockin = MCLockin('lockin', 'tcp://localhost:29170', config_file=os.path.abspath('D:\\Code\\Github\\levylab-qcodes\\tests\\experiment.config.json'))
+    print("Launching dashboard...")
+    lockin.dashboard()
+    print("Closing MCLockin...")
     lockin.close()
