@@ -88,7 +88,7 @@ class MCLockin(ZMQInstrument):
                             label='Lockin State',
                             unit='',
                             vals=vals.Enum('start', 'start sweep', 'stop'),
-                            get_cmd=self._dump,
+                            get_cmd=self._get_state,
                             set_cmd=self._set_state)
             
         # self.print_readable_snapshot(update=True)
@@ -218,9 +218,17 @@ class MCLockin(ZMQInstrument):
         param = value
         self._send_command('setState', param)
     
+    def _get_state(self) -> str:
+        response = self._send_command('getStatus')
+        return response['result']
+    
     def _set_sweepTime(self, value: float) -> None:
         param = value
         self._send_command('setSweepTime', param)
+    
+    def getsweep(self):
+        response = self._send_command('getSweepWaveforms')
+        return response['result']
 
     def _set_sweepconfig(self, channel: int, start: float, stop: float, sweep_time: float) -> None:
         '''
@@ -244,6 +252,27 @@ class MCLockin(ZMQInstrument):
                               "Table":[]}]}      
         self._send_command('setSweep', param)
 
+    def sweep_realtime(self):
+        pass
+
+    def sweep1d(self, sweep_channel, start, stop, duration, measure_channel):
+        if self.state() == 'sweeping':
+            raise Exception('Request Denied! Already sweeping')    
+        elif self.state() == 'idle':
+            self.state('start')   
+        # TODO: The state check should be happening with another function
+        self._set_sweepconfig(sweep_channel, start, stop, duration)
+        time.sleep(1)
+        self.state('start sweep')
+        # *wait for the sweep time since it'll anyway take that long (saves processor resources)
+        time.sleep(duration) 
+
+        while self.state() == 'sweeping':
+            time.sleep(0.5)
+        # should have some check here to see if the sweep is done and error handling
+        x = self.getsweep()['AO_wfm'][sweep_channel - 1]['Y']
+        y = self.getsweep()['X_wfm'][measure_channel - 1]['Y']
+        return x, y
 
 if __name__ == '__main__':
     """

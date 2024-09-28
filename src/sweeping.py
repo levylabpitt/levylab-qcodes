@@ -27,11 +27,11 @@ start_all_logging()
 
 # ---------------------------------------------------------------------
 #%% Create the instrument objects
-from levylabinst import PPMSSim, MCLockin
+from levylabinst import PPMSSim, MCLockin2
 ppms_address = 'tcp://localhost:29270'
 lockin_address = 'tcp://localhost:29170'
 ppms = PPMSSim('ppms', ppms_address)
-lockin = MCLockin('lockin', lockin_address, config={'source': 1, 'drain': 1, 'gate': 2})
+lockin = MCLockin2('lockin', lockin_address)
 # ppms.field([1,5])
 # print(ppms._send_command('Get Magnet'))
 # ---------------------------------------------------------------------
@@ -41,7 +41,7 @@ station.add_component(ppms)
 station.add_component(lockin)
 # ---------------------------------------------------------------------
 # %% Database
-db_file_path = r'D:\qcodesdb\experimentn.db'
+db_file_path = r'C:\qcodesdb\experiment.db'
 initialise_or_create_database_at(db_file_path)
 qc.config.core.db_location
 # ---------------------------------------------------------------------
@@ -57,7 +57,7 @@ jobs = bg.BackgroundJobManager()
 #jobs.new(inspectr.main, db_file_path)
 
 # %% do1d Measurement
-do1d(lockin.gate_DC, 0, 0.1, 500, 0.01, lockin.drain_X, measurement_name='do1d_measurement', exp=test_exp, write_period=0.1, show_progress=True, do_plot=True)
+do1d(lockin.gate, 0, 0.1, 500, 0.01, lockin.drain, measurement_name='do1d_measurement', exp=test_exp, write_period=0.1, show_progress=True, do_plot=True)
 
 # %% Explore Experiments and Datasets
 experiments()
@@ -68,7 +68,5 @@ dataset = load_by_run_spec(experiment_name='test_exp', captured_run_id=1)
 plot_dataset(dataset)
 # ---------------------------------------------------------------------
 # %% Interactive Widget
-experiments_widget(sort_by='run_id')
-# %%
 experiments_widget(sort_by='run_id')
 # %%
