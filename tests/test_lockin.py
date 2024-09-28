@@ -33,12 +33,6 @@ def real_time_plotting(self, refresh time):
 
 #%% Sweeping Process
 
-#For X (V) and Y (V) plotting
-
-XV = []
-YV = []
-
-
 #Check lock-in status
 lockin.state()
 
@@ -51,8 +45,6 @@ lockin._set_state('start sweep')
 #Wait for the sweep duration
 time.sleep(9)
 
-#acquiring X (V) and Y (V) while sweeping duration
-
 #To check whether Sweeping is completed or not
 
 print(lockin.state())
@@ -61,8 +53,6 @@ while lockin.state() == 'sweeping':
 
 print('sweep completed')
 print(lockin.state())  #verification of sweep completion 
-
-print(XV)
 
 #%% Acquiring data
 data = lockin._get_sweep_data()
