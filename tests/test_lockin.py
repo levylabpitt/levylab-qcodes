@@ -33,6 +33,10 @@ def real_time_plotting(self, refresh time):
 
 #%% Sweeping Process
 
+#For acquiring data
+X = []
+Y = []
+
 #Check lock-in status
 lockin.state()
 
@@ -43,13 +47,25 @@ lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",4,5)
 lockin._set_state('start sweep')
 
 #Wait for the sweep duration
-time.sleep(9)
+for i in range(45): 
+   ex1 = lockin.source_X()
+   ey1 = lockin.source_Y()
+   X.append(ex1)
+   Y.append(ey1)
+   time.sleep(0.2) #For extracting X(V) and Y(V) data, the rate is = 200ms per data. So, total time is = 45*0.2 = 9s. 
+
 
 #To check whether Sweeping is completed or not
 
 print(lockin.state())
 while lockin.state() == 'sweeping':
-    time.sleep(0.5)
+    time.sleep(0.2)
+    ex2 = lockin.source_X()
+    ey2 = lockin.source_Y()
+    X.append(ex2)
+    Y.append(ey2)
+    
+    
 
 print('sweep completed')
 print(lockin.state())  #verification of sweep completion 
@@ -104,6 +120,27 @@ print(dfy)
 
 #%%Saving the data
 Ydata = dfy.to_csv('Sweep Y data.csv')
+
+#%% Real-time plottting
+print(X)
+print(Y)
+
+#%%Real-time plotting
+npt = len(X)
+
+tpoints = np.linspace(1, len(X), len(X))
+tarray = np.array(tpoints)
+
+print(tarray)
+
+plt.plot(tarray, X, label = 'X', marker = 'o')
+plt.plot(tarray, Y, label = 'Y', marker = 'o')
+plt.title('real-time plotting during sweeping')
+plt.xlabel('points')
+plt.ylabel('X(V) and Y(V)')
+plt.legend()
+plt.show()
+plt.savefig("real-time plotting.png")
 
 # %% Plotting AO_wfm
 plt.plot(dfao)
