@@ -40,15 +40,27 @@ class MCLockin(ZMQInstrument):
             E.g. {'Ip': 1, 'Im': 2, 'Vp': 3, 'Vm': 4}
     """
 
-    def __init__(self, name: str, address: str, config_file: str = 'experiment.config.json', **kwargs: Any) -> None:
+    def __init__(self, name: str, address: str, config_file: str, **kwargs: Any) -> None:
         super().__init__(name=name, address=address,**kwargs)
+        self.address = address
+        self.config_file = config_file
+        self.config = self._get_config_from_file(config_file)
+        """
         self.config_file = config_file
         self.config = self._get_config_from_file(config_file)
         self._ref_channel = 1
+        
 
         # Start the file watcher for the config file
         self.start_file_watcher()
+        """
+        self._ref_channel = 1
 
+        """self._initialize_channels()"""
+
+        self.connect_message()
+
+        
         for label, value in self.config['lockin_config_info'].items():
             self.add_parameter(f'{label}_Amp',
                                label=f'{label} Amplitude',
@@ -92,25 +104,11 @@ class MCLockin(ZMQInstrument):
                                    label=f'{label} {measurement}',
                                    unit=meas_unit,
                                    get_cmd=partial(self._get_lockin, measurement, value))
-            
-        self.add_parameter('state',
-                            label='Lockin State',
-                            unit='',
-                            vals=vals.Enum('start', 'start sweep', 'stop sweep', 'stop'),
-                            get_cmd=self._dump,
-                            set_cmd=self._set_state)
-            
-        # self.print_readable_snapshot(update=True)
-        self.connect_message()
 
     def reset_parameters(self):
         """
         Reset defined channel parameters in JSON to default values:
-        - Amplitude: 0 V
-        - DC: 0 V
-        - Frequency: 0 Hz
-        - Phase: 0 degrees
-        - Function: Sine
+        Amplitude = 0 V, DC = 0 V, Frequency = 0 Hz, Phase = 0 degrees, Function = Sine.
         """
         default_values = {
             'Amp': 0,
@@ -158,7 +156,6 @@ class MCLockin(ZMQInstrument):
         """
         try:
             new_config = self._get_config_from_file(self.config_file)
-
             existing_channels = set(self.config['lockin_config_info'].keys())
             new_channels = set(new_config['lockin_config_info'].keys())
 
@@ -176,13 +173,12 @@ class MCLockin(ZMQInstrument):
                 del self.parameters[f'{channel}_Phase']
                 del self.parameters[f'{channel}_Function']
 
-            #for channel in new_channels - existing_channels:
-            #    self.add_channel(channel, new_config['lockin_config_info'][channel])
-
-            #for channel in existing_channels - new_channels:
-            #    self.remove_channel(channel)
-
             self.config = new_config
+
+            """self._initialize_channels()
+            print("Config reloaded successfully.")
+        except Exception as e:
+            print(f"Failed to reload configuration: {e}")"""
 
             # Reinitialize parameters
             for label, value in self.config['lockin_config_info'].items():
@@ -255,18 +251,20 @@ class MCLockin(ZMQInstrument):
 
         return config
     
-    def dashboard(self):
+    def dashboard(self, wirebonding_info, krohn_hite_info, experiment_note_info):
         """
         Launches a dashboard where the user can view existing channels, 
         add new channels, 
         delete channels,
         and view experiment info.
         """
+        """
         # Load information from the config file
         config_data = self._get_config_from_file(self.config_file)
         wirebonding_info = config_data.get('wirebonding_info', 'No info available')
         krohn_hite_info = config_data.get('krohn_hite_info', 'No info available')
         experiment_note_info = config_data.get('experiment_note_info', 'No info available')
+        """
         
         # Create the dashboard window
         dashboard = tk.Tk()
@@ -324,6 +322,13 @@ class MCLockin(ZMQInstrument):
             "serial": None,
             "firmware": "v2.15.4.4",
         }
+    
+    def connect_message(self) -> None:
+        """
+        Print a connection message for the lock-in.
+        """
+        print(f"Connected to MC Lock-in at address {self.address}.")
+        print(f"Configuration file loaded: {self.config_file}")
     
     def _dump(self):
         pass
@@ -397,15 +402,3 @@ class MCLockin(ZMQInstrument):
         self._send_command('setSweep', param)
     
  
-if __name__ == '__main__':
-    """
-    Test the Lockin class
-    """
-    from qcodes.logger import start_all_logging
-    start_all_logging()
-    print("Starting MCLockin...")
-    lockin = MCLockin('lockin', 'tcp://localhost:29170', config_file=os.path.abspath('D:\\Code\\Github\\levylab-qcodes\\tests\\experiment.config.json'))
-    print("Launching dashboard...")
-    lockin.dashboard()
-    print("Closing MCLockin...")
-    lockin.close()
