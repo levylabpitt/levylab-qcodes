@@ -50,6 +50,8 @@ lockin._set_state('start sweep')
 for i in range(45): 
    ex1 = lockin.source_X()
    ey1 = lockin.source_Y()
+   print(ex1)
+   print(ey1)
    X.append(ex1)
    Y.append(ey1)
    time.sleep(0.2) #For extracting X(V) and Y(V) data, the rate is = 200ms per data. So, total time is = 45*0.2 = 9s. 
@@ -62,6 +64,8 @@ while lockin.state() == 'sweeping':
     time.sleep(0.2)
     ex2 = lockin.source_X()
     ey2 = lockin.source_Y()
+    print(ex2)
+    print(ey2)
     X.append(ex2)
     Y.append(ey2)
     
