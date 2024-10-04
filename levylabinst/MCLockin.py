@@ -13,17 +13,6 @@ import time
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 from typing import Any, Dict
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-
-class ConfigChangeHandler(FileSystemEventHandler):
-    def __init__(self, lockin_instance):
-        self.lockin_instance = lockin_instance
-
-    def on_modified(self, event):
-        if event.src_path.endswith(self.lockin_instance.config_file):
-            print(f"Detected changes in {self.lockin_instance.config_file}, reloading config ...")
-            self.lockin_instance.reload_config()
 
 class MCLockin(ZMQInstrument):
     """
@@ -40,26 +29,14 @@ class MCLockin(ZMQInstrument):
             E.g. {'Ip': 1, 'Im': 2, 'Vp': 3, 'Vm': 4}
     """
 
-    def __init__(self, name: str, address: str, config_file: str, **kwargs: Any) -> None:
+    def __init__(self, name: str, address: str, config: dict, **kwargs: Any) -> None:
         super().__init__(name=name, address=address,**kwargs)
         self.address = address
-        self.config_file = config_file
-        self.config = self._get_config_from_file(config_file)
-        """
-        self.config_file = config_file
-        self.config = self._get_config_from_file(config_file)
-        self._ref_channel = 1
-        
+        self.config = config
 
-        # Start the file watcher for the config file
-        self.start_file_watcher()
-        """
         self._ref_channel = 1
-
-        """self._initialize_channels()"""
 
         self.connect_message()
-
         
         for label, value in self.config['lockin_config_info'].items():
             self.add_parameter(f'{label}_Amp',
@@ -150,12 +127,11 @@ class MCLockin(ZMQInstrument):
 
         print("All 8 channels have been reset to default values.")
 
-    def reload_config(self):
+    def reload_config(self, new_config):
         """
         Reload the configuration from the JSON file and update channels.
         """
         try:
-            new_config = self._get_config_from_file(self.config_file)
             existing_channels = set(self.config['lockin_config_info'].keys())
             new_channels = set(new_config['lockin_config_info'].keys())
 
@@ -173,12 +149,7 @@ class MCLockin(ZMQInstrument):
                 del self.parameters[f'{channel}_Phase']
                 del self.parameters[f'{channel}_Function']
 
-            self.config = new_config
-
-            """self._initialize_channels()
-            print("Config reloaded successfully.")
-        except Exception as e:
-            print(f"Failed to reload configuration: {e}")"""
+            self.config['lockin_config_info'] = new_config['lockin_config_info']
 
             # Reinitialize parameters
             for label, value in self.config['lockin_config_info'].items():
@@ -220,36 +191,6 @@ class MCLockin(ZMQInstrument):
             print("Config reloaded successfully.")
         except Exception as e:
             print(f"Failed to reload configuration: {e}")
-
-    def start_file_watcher(self):
-        """
-        Start watching {self.config_file} for changes.
-        """
-
-        event_handler = ConfigChangeHandler(self)
-        observer = Observer()
-        config_dir = os.path.dirname(os.path.abspath(self.config_file))
-        observer.schedule(event_handler, path= config_dir, recursive= False)
-        observer.start()
-        print(f"Started watching {self.config_file} for changes.")
-        # Run the observer in a separate thread to avoid blocking
-        import threading
-        threading.Thread(target=observer.join).start()
-
-    def _get_config_from_file(self, config_file: str) -> Dict[str, int]:
-        """
-        Reads configuration from an external JSON file.
-
-        Returns:
-            config (dict): A dictionary with labels as keys and lead numbers as values.
-        """
-        if not os.path.exists(config_file):
-            raise FileNotFoundError(f"{config_file} not found. Please provide the correct path.")
-
-        with open(config_file, 'r') as file:
-            config = json.load(file)
-
-        return config
     
     def dashboard(self, wirebonding_info, krohn_hite_info, experiment_note_info):
         """
@@ -257,13 +198,6 @@ class MCLockin(ZMQInstrument):
         add new channels, 
         delete channels,
         and view experiment info.
-        """
-        """
-        # Load information from the config file
-        config_data = self._get_config_from_file(self.config_file)
-        wirebonding_info = config_data.get('wirebonding_info', 'No info available')
-        krohn_hite_info = config_data.get('krohn_hite_info', 'No info available')
-        experiment_note_info = config_data.get('experiment_note_info', 'No info available')
         """
         
         # Create the dashboard window
@@ -328,7 +262,7 @@ class MCLockin(ZMQInstrument):
         Print a connection message for the lock-in.
         """
         print(f"Connected to MC Lock-in at address {self.address}.")
-        print(f"Configuration file loaded: {self.config_file}")
+        print(f"Configuration file loaded: {self.config}")
     
     def _dump(self):
         pass

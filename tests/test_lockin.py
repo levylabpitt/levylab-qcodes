@@ -12,22 +12,47 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 #%% Create the instrument objects
 from levylabinst import MCLockin, LocalDB
 lockin_address = 'tcp://localhost:29170'
-config_file_path = os.path.abspath('D:\\Code\\Github\\levylab-qcodes\\tests\\expconfig.json')
-if not os.path.exists(config_file_path):
-    raise FileNotFoundError(f"{config_file_path} not found. Please provide the correct path.")
-with open(config_file_path, 'r') as file:
-    config_data = json.load(file)
-lockin_config = config_data['lockin_config_info']
-wirebonding_info = config_data.get('wirebonding_info', 'No info available')
-krohn_hite_info = config_data.get('krohn_hite_info', 'No info available')
-experiment_note_info = config_data.get('experiment_note_info', 'No info available')
-lockin = MCLockin('lockin', lockin_address, config_file = config_file_path)
 
 # %% Database handling (PubuduW)
 db = LocalDB(user="postgres")
 
+# Fetch the latest config from the database
+def get_latest_config_from_db(db):
+    # Query to get the most recent config entry
+    sql_select_latest = """
+        SELECT data FROM flexconfig_test
+        ORDER BY datetime DESC
+        LIMIT 1
+    """
+    result = db.execute_fetch(sql_select_latest, method='one')
+    
+    if result:
+        latest_config = result[0]  # Extract the data from the tuple
+        if isinstance(latest_config, str):  # If it's a string, parse it
+            return json.loads(latest_config)
+        elif isinstance(latest_config, dict):  # If it's already a dict, return it directly
+            return latest_config
+        else:
+            raise TypeError("Unexpected data format in the database.")
+    else:
+        raise ValueError("No configuration data found in the database!")
+
+# Fetch the latest config from the database
+latest_config_data = get_latest_config_from_db(db)
+
+# Use the latest config data
+lockin_config = latest_config_data['lockin_config_info']
+wirebonding_info = latest_config_data.get('wirebonding_info', 'No info available')
+krohn_hite_info = latest_config_data.get('krohn_hite_info', 'No info available')
+experiment_note_info = latest_config_data.get('experiment_note_info', 'No info available')
+
+lockin_config = {
+    'lockin_config_info': lockin_config
+}
+lockin = MCLockin('lockin', lockin_address, config=lockin_config)
+
 test_datetime = datetime.now()
-json_data = json.dumps(config_data)
+json_data = json.dumps(latest_config_data)
 
 # Example insert query (this was chatGPT generated)
 sql_insert_string = """
@@ -52,7 +77,8 @@ db.close_connection()
 lockin.dashboard(wirebonding_info, krohn_hite_info, experiment_note_info)
 
 # %%
-lockin.reload_config()
+print("Latest config data being passed:", latest_config_data)
+lockin.reload_config(latest_config_data)
 
 # %%
 lockin.source_Amp(6)

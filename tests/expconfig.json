@@ -4,7 +4,7 @@
     "experiment_note_info": "Details on experiment, like user name, sample name, date, etc...",
     "lockin_config_info": {
         "drain": 1,
-        "source": 3,
-        "gate": 2
+        "source": 4,
+        "gate": 5
     }
 }
