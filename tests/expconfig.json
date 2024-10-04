@@ -5,6 +5,6 @@
     "lockin_config_info": {
         "drain": 1,
         "source": 4,
-        "gate": 5
+        "gate": 6
     }
 }
