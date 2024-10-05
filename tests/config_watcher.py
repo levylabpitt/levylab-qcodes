@@ -11,7 +11,7 @@ from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from levylabinst import MCLockin, LocalDB
 
-# Database handler function
+# Send data to database
 def upload_config_to_db(config_data, db):
     test_datetime = datetime.now()
     wirebonding_info = json.dumps(config_data.get('wirebonding_info', {}))
@@ -27,6 +27,29 @@ def upload_config_to_db(config_data, db):
     db.cursor.execute(sql_insert_string, (test_datetime, wirebonding_info, krohn_hite_info, experiment_note_info, lockin_config_info))
     db.conn.commit()
     print("Data inserted successfully!")
+
+# Retrieve the latest config from database
+def get_latest_config():
+    db = LocalDB(user="postgres")
+    
+    sql_select_latest = """
+        SELECT wirebonding_info, krohn_hite_info, experiment_info, lockin_config_info
+        FROM flexconfig_test
+        ORDER BY datetime DESC
+        LIMIT 1
+    """
+    result = db.execute_fetch(sql_select_latest, method='one')
+    db.close_connection()
+    
+    if result:
+        return {
+            'wirebonding_info': result[0],
+            'krohn_hite_info': result[1],
+            'experiment_note_info': result[2],
+            'lockin_config_info': result[3]
+        }
+    else:
+        raise ValueError("No configuration data found in the database!")
 
 # Watchdog Event Handler
 class ConfigFileHandler(FileSystemEventHandler):
