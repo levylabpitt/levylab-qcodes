@@ -1,10 +1,10 @@
 {
     "wirebonding_info": "Details about wirebonding ...",
-    "krohn_hite_info": "Details about krohn-hite amplifier ...",
+    "krohn_hite_info": "Details about krohn-hite  ...",
     "experiment_note_info": "Details on experiment, like user name, sample name, date, etc...",
     "lockin_config_info": {
+        "source": 6,
         "drain": 1,
-        "source": 4,
-        "gate": 6
+        "gate": 3
     }
 }

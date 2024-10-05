@@ -14,14 +14,17 @@ from levylabinst import MCLockin, LocalDB
 # Database handler function
 def upload_config_to_db(config_data, db):
     test_datetime = datetime.now()
-    json_data = json.dumps(config_data)
+    wirebonding_info = json.dumps(config_data.get('wirebonding_info', {}))
+    krohn_hite_info = json.dumps(config_data.get('krohn_hite_info', {}))
+    experiment_note_info = json.dumps(config_data.get('experiment_note_info', {}))
+    lockin_config_info = json.dumps(config_data.get('lockin_config_info', {}))                                                         
     
     # Example insert query
     sql_insert_string = """
-        INSERT INTO flexconfig_test (datetime, data)
-        VALUES (%s, %s)
+        INSERT INTO flexconfig_test (datetime, wirebonding_info, krohn_hite_info, experiment_info, lockin_config_info)
+        VALUES (%s, %s, %s, %s, %s)
     """
-    db.cursor.execute(sql_insert_string, (test_datetime, json_data))
+    db.cursor.execute(sql_insert_string, (test_datetime, wirebonding_info, krohn_hite_info, experiment_note_info, lockin_config_info))
     db.conn.commit()
     print("Data inserted successfully!")
 
