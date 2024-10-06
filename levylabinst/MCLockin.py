@@ -240,6 +240,10 @@ class MCLockin(ZMQInstrument):
     def _sweep_process_duration(self, swtime = float) -> None: #To process the sweeping during given sweeping time 
         time.sleep(swtime)
 
+    def _sweep_yet_starting(self) -> None:
+        while self._get_state() == 'started':
+             time.sleep(0.2) 
+
     def _sweep_checking(self) -> None:
          while self._get_state() == 'sweeping':
              time.sleep(0.2) 

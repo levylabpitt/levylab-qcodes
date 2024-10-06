@@ -44,13 +44,12 @@ lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",4,5)
 #start sweeping
 lockin._set_state('start sweep')
 
-#Wait for the sweep duration
-lockin._sweep_process_duration(9)
- 
-#To check whether Sweeping is completed or not
+#Sweeping occurs
+lockin._sweep_yet_starting()
 
-print(lockin.state())
-lockin._sweep_checking()
+lockin._sweep_checking() 
+
+#print(lockin.state())
     
     
 print('sweep completed')
