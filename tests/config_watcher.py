@@ -15,16 +15,22 @@ from levylabinst import MCLockin, LocalDB
 def upload_config_to_db(config_data, db):
     test_datetime = datetime.now()
     wirebonding_info = json.dumps(config_data.get('wirebonding_info', {}))
-    krohn_hite_info = json.dumps(config_data.get('krohn_hite_info', {}))
+    kh_config_info = json.dumps(config_data.get('kh_config_info', {}))
     experiment_note_info = json.dumps(config_data.get('experiment_note_info', {}))
-    lockin_config_info = json.dumps(config_data.get('lockin_config_info', {}))                                                         
+    lockin_config_info = json.dumps(config_data.get('lockin_config_info', {}))
+
+    # Debugging print statements to see the data before inserting
+    print("Wirebonding Info:", wirebonding_info)
+    print("KH Config Info:", kh_config_info)
+    print("Experiment Note Info:", experiment_note_info)
+    print("Lockin Config Info:", lockin_config_info)                                                
     
     # Example insert query
     sql_insert_string = """
-        INSERT INTO flexconfig_test (datetime, wirebonding_info, krohn_hite_info, experiment_info, lockin_config_info)
+        INSERT INTO flexconfig_test (datetime, wirebonding_info, kh_config_info, experiment_info, lockin_config_info)
         VALUES (%s, %s, %s, %s, %s)
     """
-    db.cursor.execute(sql_insert_string, (test_datetime, wirebonding_info, krohn_hite_info, experiment_note_info, lockin_config_info))
+    db.cursor.execute(sql_insert_string, (test_datetime, wirebonding_info, kh_config_info, experiment_note_info, lockin_config_info))
     db.conn.commit()
     print("Data inserted successfully!")
 
@@ -33,7 +39,7 @@ def get_latest_config():
     db = LocalDB(user="postgres")
     
     sql_select_latest = """
-        SELECT wirebonding_info, krohn_hite_info, experiment_info, lockin_config_info
+        SELECT wirebonding_info, kh_config_info, experiment_info, lockin_config_info
         FROM flexconfig_test
         ORDER BY datetime DESC
         LIMIT 1
@@ -42,9 +48,10 @@ def get_latest_config():
     db.close_connection()
     
     if result:
+        print("Fetched Data from DB:", result)
         return {
             'wirebonding_info': result[0],
-            'krohn_hite_info': result[1],
+            'kh_config_info': result[1],
             'experiment_note_info': result[2],
             'lockin_config_info': result[3]
         }
@@ -63,6 +70,7 @@ class ConfigFileHandler(FileSystemEventHandler):
             try:
                 with open(self.config_file_path, 'r') as file:
                     config_data = json.load(file)
+
                 upload_config_to_db(config_data, self.db)
             except Exception as e:
                 print(f"Error reading or uploading config file: {e}")
@@ -98,3 +106,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

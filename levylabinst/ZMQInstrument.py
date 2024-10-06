@@ -79,18 +79,30 @@ class ZMQInstrument(Instrument):
         self.socket.setsockopt(zmq.RCVTIMEO, int(timeout * 1000))
         self.socket.setsockopt(zmq.SNDTIMEO, int(timeout * 1000))
 
-    def get_idn(self) -> dict[str, Optional[str]]:
-        """
-        JSON request of IDN should return this information from the IF.
-        It'd be better to handle this in the child instrument level:
-        So that IDN is handled for each instrument separately.
-        Or maybe not, since the IDN is a standard command.
-        """
+    """def get_idn(self) -> dict[str, Optional[str]]:
+        
+        # JSON request of IDN should return this information from the IF. 
+        # It'd be better to handle this in the child instrument level: 
+        # So that IDN is handled for each instrument separately.
+        # Or maybe not, since the IDN is a standard command.
+        
         return {
             "vendor": "Quantum Design PPMS",
             "model": "Simulation",
             "serial": None,
             "firmware": None,
+        }"""
+    
+    def get_idn(self) -> dict[str, Optional[str]]:
+        """
+        Returns identification information for the instrument.
+        Specific instruments can override the "model" or other fields.
+        """
+        return {
+            "vendor": "LevyLab",
+            "model": "Generic ZMQ Instrument",  # Default model
+            "serial": None,
+            "firmware": "v1.0.0",
         }
 
     def help(self, method: str = None) -> Sequence[str]:

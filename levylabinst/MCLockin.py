@@ -82,51 +82,6 @@ class MCLockin(ZMQInstrument):
                                    unit=meas_unit,
                                    get_cmd=partial(self._get_lockin, measurement, value))
 
-    def reset_parameters(self):
-        """
-        Reset defined channel parameters in JSON to default values:
-        Amplitude = 0 V, DC = 0 V, Frequency = 0 Hz, Phase = 0 degrees, Function = Sine.
-        """
-        default_values = {
-            'Amp': 0,
-            'DC': 0,
-            'Freq': 0,
-            'Phase': 0,
-            'Function': 'Sine'
-        }
-
-        for label, value in self.config['lockin_config_info'].items():
-            self.set(f'{label}_Amp', default_values['Amp'])
-            self.set(f'{label}_DC', default_values['DC'])
-            self.set(f'{label}_Freq', default_values['Freq'])
-            self.set(f'{label}_Phase', default_values['Phase'])
-            self.set(f'{label}_Function', default_values['Function'])
-
-        print("Parameters for defined channels have been reset to default values.")
-
-    def reset_all_parameters(self) -> None:
-        """
-        Reset all 8 channels to default values:
-        Amplitude = 0 V, DC = 0 V, Frequency = 0 Hz, Phase = 0 degrees, Function = Sine.
-        """
-        default_values = {
-            'Amplitude (V)': 0,
-            'DC (V)': 0,
-            'Frequency (Hz)': 0,
-            'Phase (deg)': 0,
-            'Function': 'Sine'
-        }
-
-        # Reset parameters for all 8 channels (channel numbers 1 to 8)
-        for channel in range(1, 9):
-            self._send_command('setAO_Amplitude', {'AO Channel': channel, 'Amplitude (V)': default_values['Amplitude (V)']})
-            self._send_command('setAO_DC', {'AO Channel': channel, 'DC (V)': default_values['DC (V)']})
-            self._send_command('setAO_Frequency', {'AO Channel': channel, 'Frequency (Hz)': default_values['Frequency (Hz)']})
-            self._send_command('setAO_Phase', {'AO Channel': channel, 'Phase (deg)': default_values['Phase (deg)']})
-            self._send_command('setAO_Function', {'AO Channel': channel, 'Function': default_values['Function']})
-
-        print("All 8 channels have been reset to default values.")
-
     def reload_config(self, new_config):
         """
         Reload the configuration from the JSON file and update channels.
@@ -192,70 +147,57 @@ class MCLockin(ZMQInstrument):
         except Exception as e:
             print(f"Failed to reload configuration: {e}")
     
-    def dashboard(self, wirebonding_info, krohn_hite_info, experiment_note_info):
+    def reset_parameters(self):
         """
-        Launches a dashboard where the user can view existing channels, 
-        add new channels, 
-        delete channels,
-        and view experiment info.
+        Reset defined channel parameters in JSON to default values:
+        Amplitude = 0 V, DC = 0 V, Frequency = 0 Hz, Phase = 0 degrees, Function = Sine.
         """
+        default_values = {
+            'Amp': 0,
+            'DC': 0,
+            'Freq': 0,
+            'Phase': 0,
+            'Function': 'Sine'
+        }
+
+        for label, value in self.config['lockin_config_info'].items():
+            self.set(f'{label}_Amp', default_values['Amp'])
+            self.set(f'{label}_DC', default_values['DC'])
+            self.set(f'{label}_Freq', default_values['Freq'])
+            self.set(f'{label}_Phase', default_values['Phase'])
+            self.set(f'{label}_Function', default_values['Function'])
+
+        print("Parameters for defined channels have been reset to default values.")
+
+    def reset_all_parameters(self) -> None:
+        """
+        Reset all 8 channels to default values:
+        Amplitude = 0 V, DC = 0 V, Frequency = 0 Hz, Phase = 0 degrees, Function = Sine.
+        """
+        default_values = {
+            'Amplitude (V)': 0,
+            'DC (V)': 0,
+            'Frequency (Hz)': 0,
+            'Phase (deg)': 0,
+            'Function': 'Sine'
+        }
+
+        # Reset parameters for all 8 channels (channel numbers 1 to 8)
+        for channel in range(1, 9):
+            self._send_command('setAO_Amplitude', {'AO Channel': channel, 'Amplitude (V)': default_values['Amplitude (V)']})
+            self._send_command('setAO_DC', {'AO Channel': channel, 'DC (V)': default_values['DC (V)']})
+            self._send_command('setAO_Frequency', {'AO Channel': channel, 'Frequency (Hz)': default_values['Frequency (Hz)']})
+            self._send_command('setAO_Phase', {'AO Channel': channel, 'Phase (deg)': default_values['Phase (deg)']})
+            self._send_command('setAO_Function', {'AO Channel': channel, 'Function': default_values['Function']})
+
+        print("All 8 channels have been reset to default values.")
         
-        # Create the dashboard window
-        dashboard = tk.Tk()
-        dashboard.title("Experiment Dashboard")
-
-        # Function to update the dashboard with the current channels and additional info
-        def update_dashboard():
-            
-            #Clear all existing widgets from the window before refreshing
-            for widget in dashboard.grid_slaves():
-                widget.grid_forget()
-
-            # Display the existing channels in the config
-            tk.Label(dashboard, text="Existing Channels:").grid(row=0, column=0, columnspan=2)
-
-            row = 1
-            for label, lead_number in self.config['lockin_config_info'].items():
-                tk.Label(dashboard, text=f"Channel {label}:").grid(row=row, column=0)
-                tk.Label(dashboard, text=f"Lead Number {lead_number}").grid(row=row, column=1)
-                row += 1
-
-            # Display wirebonding details
-            tk.Label(dashboard, text="WireBonding Info:").grid(row=row, column=0, sticky="w")
-            tk.Label(dashboard, text=wirebonding_info).grid(row=row, column=1, sticky="w")
-            row += 1
-
-            # Display krohn-hite details
-            tk.Label(dashboard, text="Krohn-Hite Info:").grid(row=row, column=0, sticky="w")
-            tk.Label(dashboard, text=krohn_hite_info).grid(row=row, column=1, sticky="w")
-            row += 1
-
-            # Display experiment notes
-            tk.Label(dashboard, text="Experiment Note:").grid(row=row, column=0, sticky="w")
-            tk.Label(dashboard, text=experiment_note_info).grid(row=row, column=1, sticky="w")
-            row += 1
-
-            # OK button to close the dashboard
-            ok_button = tk.Button(dashboard, text="OK", command=dashboard.destroy)
-            ok_button.grid(row=row + 1, column=0, columnspan=2)
-
-        # Initially update the dashboard when the window is created
-        update_dashboard()
-
-        # Start the dashboard main loop
-        dashboard.mainloop()
-
     
     def get_idn(self) -> dict[str, Optional[str]]:
-        """
-        This is a temporary override. It should go in the ZMQInstrument class. and called by Inst Framework by a RPC call.
-        """
-        return {
-            "vendor": "LevyLab",
-            "model": "MC Lock-in",
-            "serial": None,
-            "firmware": "v2.15.4.4",
-        }
+        idn_info = super().get_idn()  # Reuse the parent method
+        idn_info["model"] = "MC Lock-in"  # Override the model field
+        idn_info["firmware"] = "v2.15.4.4"  # Override the firmware field
+        return idn_info
     
     def connect_message(self) -> None:
         """
