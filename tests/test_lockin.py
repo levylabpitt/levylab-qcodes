@@ -31,14 +31,12 @@ def real_time_plotting(self, refresh time):
     query for the data with a given refresh time and plot the results as the sweep is going on.
 '''
 
-#%% Sweeping Process
-
-#For acquiring data
-X = []
-Y = []
+#%% State checking
 
 #Check lock-in status
 lockin.state()
+
+#%% Sweep process
 
 #sweep configuration
 lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",4,5)
@@ -47,90 +45,35 @@ lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",4,5)
 lockin._set_state('start sweep')
 
 #Wait for the sweep duration
-for i in range(45): 
-   ex1 = lockin.source_X()
-   ey1 = lockin.source_Y()
-   print(ex1)
-   print(ey1)
-   X.append(ex1)
-   Y.append(ey1)
-   time.sleep(0.2) #For extracting X(V) and Y(V) data, the rate is = 200ms per data. So, total time is = 45*0.2 = 9s. 
-
-
+lockin._sweep_process_duration(9)
+ 
 #To check whether Sweeping is completed or not
 
 print(lockin.state())
-while lockin.state() == 'sweeping':
-    time.sleep(0.2)
-    ex2 = lockin.source_X()
-    ey2 = lockin.source_Y()
-    print(ex2)
-    print(ey2)
-    X.append(ex2)
-    Y.append(ey2)
+lockin._sweep_checking()
     
     
-
 print('sweep completed')
 print(lockin.state())  #verification of sweep completion 
 
-#%% Acquiring data
-data = lockin._get_sweep_data()
+#%% Getting AI Data
+lockin._plot_SweepAI()
 
-# %%Extract the "AI_wfm" array
-ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
+#%% Getting AO data
+lockin._plot_SweepAO()
 
-#%% Convert to DataFrame
-dfai = pd.DataFrame(ai_array).transpose()
+#%% Getting Sweep X data
+lockin._plot_SweepX()
 
-#%%Printing the data
-print(dfai)
-
-#%%Saving the data
-AIdata = dfai.to_csv('Sweep AI data.csv')
-
-# %%Extract the "AO_wfm" array
-ao_array = [entry['Y'] for entry in data['result']['AO_wfm']]
-
-# %%Convert to DataFrame
-dfao = pd.DataFrame(ao_array).transpose()
-
-#%%Printing the data
-print(dfao)
-
-#%%Saving the data
-AOdata = dfao.to_csv('Sweep AO data.csv')
-
-# %%Extract the "X_wfm" array
-x_array = [entry['Y'] for entry in data['result']['X_wfm']]
-
-# %%Convert to DataFrame
-dfx = pd.DataFrame(x_array).transpose()
-
-#%%Printing the data
-print(dfx)
-
-#%%Saving the data
-Xdata = dfx.to_csv('Sweep X data.csv')
-
-# %%Extract the "Y_wfm" array
-y_array = [entry['Y'] for entry in data['result']['Y_wfm']]
-
-# %%Convert to DataFrame
-dfy = pd.DataFrame(y_array).transpose()
-
-#%% Printing dfy
-print(dfy)
-
-#%%Saving the data
-Ydata = dfy.to_csv('Sweep Y data.csv')
+#%% Getting Sweep Y data
+lockin._plot_SweepY()
 
 #%% Real-time plottting
-print(X)
+'''print(X)
 print(Y)
-
+'''
 #%%Real-time plotting
-npt = len(X)
+'''npt = len(X)
 
 tpoints = np.linspace(1, len(X), len(X))
 tarray = np.array(tpoints)
@@ -145,41 +88,4 @@ plt.ylabel('X(V) and Y(V)')
 plt.legend()
 plt.show()
 plt.savefig("real-time plotting.png")
-
-# %% Plotting AO_wfm
-plt.plot(dfao)
-plt.title('Sweep AO')
-plt.xlabel('Samples')
-plt.ylabel('Sweep AO (V)')
-plt.show()
-plt.savefig("Sweep AO.png", dpi=500)
-
-# %% Plotting AI_wfm
-plt.plot(dfai)
-plt.title('Sweep AI')
-plt.xlabel('Samples')
-plt.ylabel('Sweep AI (V)')
-plt.show()
-plt.savefig("Sweep AI.png", dpi=500)
-
-
-# %% Plotting X_wfm
-plt.plot(dfx)
-plt.title('Sweep X')
-plt.xlabel('Samples')
-plt.ylabel('Sweep X Results (V)')
-plt.show()
-plt.savefig("Sweep X.png", dpi=500)
-
-
-# %%Plotting Y_wfm
-plt.plot(dfy)
-plt.title('Sweep Y')
-plt.xlabel('Samples')
-plt.ylabel('Sweep Y Results (V)')
-plt.show()
-plt.savefig("Sweep Y.png", dpi=500)
-
-
-
-# %%
+'''

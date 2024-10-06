@@ -11,6 +11,8 @@ import qcodes.validators as vals
 from qcodes.utils import DelayedKeyboardInterrupt
 import time
 import tkinter as tk
+import matplotlib.pyplot as plt
+import pandas as pd
 from tkinter import simpledialog, messagebox
 from typing import Any, Dict
 
@@ -231,6 +233,70 @@ class MCLockin(ZMQInstrument):
         param = value
         self._send_command('setSweepTime', param)
 
+    def _get_AO(self) -> dict:
+        response = self._send_command('getAOconfig')
+        return response
+    
+    def _sweep_process_duration(self, swtime = float) -> None: #To process the sweeping during given sweeping time 
+        time.sleep(swtime)
+
+    def _sweep_checking(self) -> None:
+         while self._get_state() == 'sweeping':
+             time.sleep(0.2) 
+
+    def _plot_SweepAI(self) -> None:
+        data = self._get_sweep_data()
+        ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
+        dfai = pd.DataFrame(ai_array).transpose()
+        print(dfai)
+        dfai.to_csv('Sweep AI data.csv')
+        plt.plot(dfai)
+        plt.title('Sweep AI')
+        plt.xlabel('Samples')
+        plt.ylabel('Sweep AI (V)')
+        plt.show()
+        plt.savefig("Sweep AI.png", dpi=500)
+
+    def _plot_SweepAO(self) -> None:
+        data = self._get_sweep_data()
+        ao_array = [entry['Y'] for entry in data['result']['AO_wfm']]
+        dfao = pd.DataFrame(ao_array).transpose()
+        print(dfao)
+        dfao.to_csv('Sweep AO data.csv')
+        plt.plot(dfao)
+        plt.title('Sweep AO')
+        plt.xlabel('Samples')
+        plt.ylabel('Sweep AO (V)')
+        plt.show()
+        plt.savefig("Sweep AO.png", dpi=500)
+
+    def _plot_SweepY(self) -> None:
+        data = self._get_sweep_data()
+        y_array = [entry['Y'] for entry in data['result']['Y_wfm']]
+        dfy = pd.DataFrame(y_array).transpose()
+        print(dfy)
+        dfy.to_csv('Sweep Y data.csv')
+        plt.plot(dfy)
+        plt.title('Sweep Y')
+        plt.xlabel('Samples')
+        plt.ylabel('Sweep Y results (V)')
+        plt.show()
+        plt.savefig("Sweep Y.png", dpi=500)
+
+    def _plot_SweepX(self) -> None:
+        data = self._get_sweep_data()
+        x_array = [entry['Y'] for entry in data['result']['X_wfm']]
+        dfx = pd.DataFrame(x_array).transpose()
+        print(dfx)
+        dfx.to_csv('Sweep X data.csv')
+        plt.plot(dfx)
+        plt.title('Sweep X')
+        plt.xlabel('Samples')
+        plt.ylabel('Sweep X results (V)')
+        plt.show()
+        plt.savefig("Sweep X.png", dpi=500)
+
+    
 
     def _set_sweepconfig(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
         '''
@@ -264,7 +330,6 @@ class MCLockin(ZMQInstrument):
                               "Pattern": pattern,
                               "Table":[]}]}      
         self._send_command('setSweep', param)
-
 
 if __name__ == '__main__':
     """
