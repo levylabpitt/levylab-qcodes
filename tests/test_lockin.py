@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 #%% Create the instrument objects
 from levylabinst import MCLockin
 lockin_address = 'tcp://localhost:29170'
-lockin = MCLockin('lockin', lockin_address, config={"source":1})
+lockin = MCLockin('lockin', lockin_address, config={"gate1":1, "gate2":2, "gate3":3})
 
 # %% Psuedo code for sweep checking
 
@@ -36,24 +36,11 @@ def real_time_plotting(self, refresh time):
 #Check lock-in status
 lockin.state()
 
-#%% Sweep process
+#%% Sweep configuration
+lockin._set_1dsweepconfig([[1,0.04,0.10,"Ramp /"],[2,0.05,0.11,"Ramp /"],[3,0.06,0.12,"Smooth Ramp _/"]],5,6)
 
-#sweep configuration
-lockin._set_sweepconfig(1,0.04,0.09,"Ramp /",4,5)
-
-#start sweeping
-lockin._set_state('start sweep')
-
-#Sweeping occurs
-lockin._sweep_yet_starting()
-
-lockin._sweep_checking() 
-
-#print(lockin.state())
-    
-    
-print('sweep completed')
-print(lockin.state())  #verification of sweep completion 
+#%%sweeping
+lockin._sweep_process()
 
 #%% Getting AI Data
 lockin._plot_SweepAI()

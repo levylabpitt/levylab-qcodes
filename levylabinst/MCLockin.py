@@ -236,19 +236,16 @@ class MCLockin(ZMQInstrument):
     def _get_AO(self) -> dict:
         response = self._send_command('getAOconfig')
         return response
-    
-    def _sweep_process_duration(self, swtime = float) -> None: #To process the sweeping during given sweeping time 
-        time.sleep(swtime)
 
-    def _sweep_yet_starting(self) -> None:
+    def _sweep_yet_starting(self) -> None: #detects when the sweep is actually beginning after start sweep is commanded.
         while self._get_state() == 'started':
              time.sleep(0.2) 
 
-    def _sweep_checking(self) -> None:
+    def _sweep_checking(self) -> None:  #continues the sweep process until sweep is completed. 
          while self._get_state() == 'sweeping':
              time.sleep(0.2) 
 
-    def _plot_SweepAI(self) -> None:
+    def _plot_SweepAI(self) -> None: 
         data = self._get_sweep_data()
         ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
         dfai = pd.DataFrame(ai_array).transpose()
@@ -313,8 +310,7 @@ class MCLockin(ZMQInstrument):
             sweep_time: The time of the sweep
             pattern: The pattern of the sweep
         '''
-        if pattern == "Table":
-           param = {"Sweep Time (s)":sweep_time,
+        param = {"Sweep Time (s)":sweep_time,
                  "Initial Wait (s)":initial_wait,
                  "Return to Start":False,
                  "Channels":[{"Enable?":True,
@@ -322,18 +318,50 @@ class MCLockin(ZMQInstrument):
                               "Start":start,
                               "End":stop,
                               "Pattern": pattern,
-                              "Table": [2,4,6,8]}]} 
-        else:
-            param = {"Sweep Time (s)":sweep_time,
-                 "Initial Wait (s)":initial_wait,
-                 "Return to Start":False,
-                 "Channels":[{"Enable?":True,
-                              "Channel":channel,
-                              "Start":start,
-                              "End":stop,
-                              "Pattern": pattern,
-                              "Table":[]}]}      
+                              "Table": [2,4,6,8] if pattern == "Table" else []}]} 
+        
         self._send_command('setSweep', param)
+
+
+    def _set_1dsweepconfig(self, channels: list, initial_wait: float, sweep_time: float) ->None:
+        channel_configs = []
+        for channel in channels:
+            channel_configs.append({
+            "Enable?":True,
+            "Channel":channel[0],
+            "Start":channel[1],
+            "End":channel[2],
+            "Pattern": channel[3],    
+            "Table": [2,4,6,8] if channel[3] == "Table" else []})
+        
+        param = {
+        "Sweep Time (s)":sweep_time,
+        "Initial Wait (s)":initial_wait,
+        "Return to Start":False,
+        "Channels":channel_configs}
+
+        self._send_command('setsweep',param)
+
+    def _sweep_11d(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
+        self._set_sweepconfig(channel, start, stop, pattern, initial_wait, sweep_time)
+        self._set_state('start sweep')
+        self._sweep_yet_starting()
+        self._sweep_checking()
+        print('sweep completed')
+
+    def _sweep_process(self) -> None:
+        self._set_state('start sweep')
+        self._sweep_yet_starting()
+        self._sweep_checking()
+        print('sweep completed')
+
+    '''def _multiple_sweep(self, n=float) -> None:
+        for i in range(n):
+            
+            '''
+
+
+    
 
 if __name__ == '__main__':
     """
