@@ -250,7 +250,7 @@ class MCLockin(ZMQInstrument):
         ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
         dfai = pd.DataFrame(ai_array).transpose()
         print(dfai)
-        dfai.to_csv('Sweep AI data.csv')
+        dfai.to_csv('/Users/SoumyaR/Documents/Data/Sweep AI data.csv')
         plt.plot(dfai)
         plt.title('Sweep AI')
         plt.xlabel('Samples')
@@ -263,7 +263,7 @@ class MCLockin(ZMQInstrument):
         ao_array = [entry['Y'] for entry in data['result']['AO_wfm']]
         dfao = pd.DataFrame(ao_array).transpose()
         print(dfao)
-        dfao.to_csv('Sweep AO data.csv')
+        dfao.to_csv('/Users/SoumyaR/Documents/Data/Sweep AO data.csv')
         plt.plot(dfao)
         plt.title('Sweep AO')
         plt.xlabel('Samples')
@@ -276,7 +276,7 @@ class MCLockin(ZMQInstrument):
         y_array = [entry['Y'] for entry in data['result']['Y_wfm']]
         dfy = pd.DataFrame(y_array).transpose()
         print(dfy)
-        dfy.to_csv('Sweep Y data.csv')
+        dfy.to_csv('/Users/SoumyaR/Documents/Data/Sweep Y data.csv')
         plt.plot(dfy)
         plt.title('Sweep Y')
         plt.xlabel('Samples')
@@ -289,7 +289,7 @@ class MCLockin(ZMQInstrument):
         x_array = [entry['Y'] for entry in data['result']['X_wfm']]
         dfx = pd.DataFrame(x_array).transpose()
         print(dfx)
-        dfx.to_csv('Sweep X data.csv')
+        dfx.to_csv('/Users/SoumyaR/Documents/Data/Sweep X data.csv')
         plt.plot(dfx)
         plt.title('Sweep X')
         plt.xlabel('Samples')
@@ -355,11 +355,7 @@ class MCLockin(ZMQInstrument):
         self._sweep_checking()
         print('sweep completed')
 
-    '''def _multiple_sweep(self, n=float) -> None:
-        for i in range(n):
-            
-            '''
-
+   
 
     
 

@@ -37,7 +37,7 @@ def real_time_plotting(self, refresh time):
 lockin.state()
 
 #%% Sweep configuration
-lockin._set_1dsweepconfig([[1,0.04,0.10,"Ramp /"],[2,0.05,0.11,"Ramp /"],[3,0.06,0.12,"Smooth Ramp _/"]],5,6)
+lockin._set_1dsweepconfig([[1,0.04,0.10,"Ramp /"],[2,0.07,0.11,"Ramp /"],[3,0.06,0.12,"Smooth Ramp _/"],[4,0.07,0.14,"Smooth Ramp _/"]],5,6)
 
 #%%sweeping
 lockin._sweep_process()
