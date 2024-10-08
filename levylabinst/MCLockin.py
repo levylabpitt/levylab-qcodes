@@ -323,22 +323,22 @@ class MCLockin(ZMQInstrument):
         self._send_command('setSweep', param)
 
 
-    def _set_1dsweepconfig(self, channels: list, initial_wait: float, sweep_time: float) ->None:
-        channel_configs = []
-        for channel in channels:
-            channel_configs.append({
+    def _set_1dsweepconfig(self, channel_configs: list, initial_wait: float, sweep_time: float) ->None:
+        channel_configs_list = []
+        for channel in channel_configs:
+            channel_configs_list.append({
             "Enable?":True,
             "Channel":channel[0],
             "Start":channel[1],
             "End":channel[2],
             "Pattern": channel[3],    
-            "Table": [2,4,6,8] if channel[3] == "Table" else []})
+            "Table": channel[4] if channel[3] == "Table" else []})
         
         param = {
         "Sweep Time (s)":sweep_time,
         "Initial Wait (s)":initial_wait,
         "Return to Start":False,
-        "Channels":channel_configs}
+        "Channels":channel_configs_list}
 
         self._send_command('setsweep',param)
 
