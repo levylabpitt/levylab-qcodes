@@ -355,6 +355,49 @@ class MCLockin(ZMQInstrument):
         self._sweep_checking()
         print('sweep completed')
 
+    def _reference(self, ref_configs: list) -> None:
+        ref_configs_list = []
+
+        for ref in ref_configs:
+            ref_configs_list.append({
+            "Enable?": True,
+            "Channel": ref[0],
+            "Frequency": ref[1],
+            "Phase": ref[2],
+            "TC": ref[3],
+            "Roll-Off": ref[4]
+            })
+
+        param = {"Channels: Lockin in":ref_configs_list}
+
+        self._send_command('setREF',param)
+
+    def _set_DAQ(self, DAQ_configs: list) -> None:
+        DAQ_configs_list = []
+
+        for daq in DAQ_configs:
+             DAQ_configs_list.append({
+             "Device": daq[0],
+             "AO.Ch": daq[1],
+             "AO.Range": daq[2],
+             "AI.Ch": daq[3],
+             "AI.Range":daq[4],
+             "AI.Coupling":daq[5]
+             })
+
+        param = {"setDAQ":DAQ_configs_list}
+
+        self._send_command('setDAQ', param)
+
+    def _set_sampling(self, FS: float, s: float) -> None:
+        param = {'Fs': FS, '#s':s}
+        self._send_command('setSampling',param)
+
+    def _set_REF_frequency(self, REFch: float, freq: float) -> None:
+        param = {'REF Channel':REFch, 'Frequency (Hz)': freq}
+        self._send_command('setREF_Frequency',param)
+
+
    
 
     
