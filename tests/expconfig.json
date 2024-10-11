@@ -4,11 +4,24 @@
         "drain": 2,
         "gate": 4
     },
-    "kh_config_info": {
-        "Channel1": 1,
-        "Channel2": 2,
-        "Channel3": 3
-    },
+    "kh_config_info": [
+        {
+            "channel": 1,
+            "gain": 10,
+            "input": "SE+",
+            "shunt": 500,
+            "couple": "AC",
+            "filter": "ON"
+        },
+        {
+            "channel": 2,
+            "gain": 100,
+            "input": "DIFF",
+            "shunt": 50,
+            "couple": "DC",
+            "filter": "OFF"
+        }
+    ],
     "wirebonding_info": "Details about wirebonding ...",
     "experiment_note_info": "Details on experiment, like user name, sample name, date, etc..."
     
