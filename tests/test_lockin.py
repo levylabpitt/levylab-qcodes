@@ -11,9 +11,7 @@ from config_watcher import get_latest_config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from levylabinst import MCLockin
 from levylabinst.dashboard import Dashboard
-from levylabinst.KrohnHite import KrohnHite
 lockin_address = 'tcp://localhost:29170'
-kh_address = 'tcp://localhost:29160'
 # %% Database handling
 latest_config_data = get_latest_config()
 
@@ -29,12 +27,6 @@ if 'lockin' in qc.Instrument._all_instruments:
 
 lockin = MCLockin('lockin', lockin_address, config={'lockin_config_info': lockin_config})
 
-if 'kh' in qc.Instrument._all_instruments:
-    kh = qc.Instrument._all_instruments['kh']
-    kh.close()
-
-kh = KrohnHite('kh', kh_address, config={'kh_config_info': kh_config_info})
-
 # %%
 dashboard = Dashboard(lockin_config_info=lockin_config, 
     kh_config_info=kh_config_info, 
@@ -43,15 +35,7 @@ dashboard = Dashboard(lockin_config_info=lockin_config,
 dashboard.launch()
 
 # %%
-print("Latest config data being passed:", latest_config_data)
-
-# %%
 lockin.source_Amp(6)
 
 # %%
-kh.channel1_gain(1)
-
-# %%
 lockin.reset_all_parameters()
-#%%
-kh._send_command("getAllChannels")
