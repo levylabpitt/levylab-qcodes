@@ -44,12 +44,18 @@ class Dashboard:
 
             # Display Krohn-Hite configuration if available
             if self.kh_config_info:
-                tk.Label(dashboard, text="Krohn-Hite Channels:", font=bold_italic_font).grid(row=row, column=0, columnspan=2)
+                tk.Label(dashboard, text="Krohn-Hite Configurations:", font=bold_italic_font).grid(row=row, column=0, columnspan=2)
 
                 row += 1
-                for label, lead_number in self.kh_config_info.items():
-                    tk.Label(dashboard, text=f"Channel {label}:").grid(row=row, column=0)
-                    tk.Label(dashboard, text=f"Lead Number {lead_number}").grid(row=row, column=1)
+                for kh_channel in self.kh_config_info:
+                    channel = kh_channel['channel']
+                    gain = kh_channel['gain']
+                    input_type = kh_channel['input']
+                    shunt = kh_channel['shunt']
+                    couple = kh_channel['couple']
+                    filter_status = kh_channel['filter']
+                    tk.Label(dashboard, text=f"Channel {channel}:").grid(row=row, column=0)
+                    tk.Label(dashboard, text=f"Gain: {gain}, Input: {input_type}, Shunt: {shunt}, Couple: {couple}, Filter: {filter_status}").grid(row=row, column=1)
                     row += 1
             else:
                 print("No kh_config_info in config.")
