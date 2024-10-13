@@ -31,7 +31,9 @@ from levylabinst import PPMSSim, MCLockin
 ppms_address = 'tcp://localhost:29270'
 lockin_address = 'tcp://localhost:29170'
 ppms = PPMSSim('ppms', ppms_address)
-lockin = MCLockin('lockin', lockin_address)
+config_waveguide = {'source': 1, 'drain': 1, 'gate': 2}
+
+lockin = MCLockin('lockin', lockin_address, config=config_waveguide)
 # ppms.field([1,5])
 # print(ppms._send_command('Get Magnet'))
 # ---------------------------------------------------------------------
@@ -41,7 +43,7 @@ station.add_component(ppms)
 station.add_component(lockin)
 # ---------------------------------------------------------------------
 # %% Database
-db_file_path = r'D:\qcodesdb\experimentn.db'
+db_file_path = r'C:\qcodesdb\experiment1.db'
 initialise_or_create_database_at(db_file_path)
 qc.config.core.db_location
 # ---------------------------------------------------------------------
@@ -50,14 +52,14 @@ test_exp = load_or_create_experiment('test_exp', sample_name='SimWaveguide')
 # ---------------------------------------------------------------------
 
 # %% do1d Measurement
-import IPython.lib.backgroundjobs as bg
+# import IPython.lib.backgroundjobs as bg
 # from plottr.apps import inspectr
 
-jobs = bg.BackgroundJobManager()
-#jobs.new(inspectr.main, db_file_path)
+# jobs = bg.BackgroundJobManager()
+# jobs.new(inspectr.main, db_file_path)
 
 # %% do1d Measurement
-do1d(lockin.gate, 0, 0.1, 500, 0.01, lockin.drain, measurement_name='do1d_measurement', exp=test_exp, write_period=0.1, show_progress=True, do_plot=True)
+do1d(lockin.gate_DC, 0, 0.1, 500, 0.01, lockin.drain_X, measurement_name='do1d_measurement', exp=test_exp, write_period=0.1, show_progress=True, do_plot=True)
 
 # %% Explore Experiments and Datasets
 experiments()

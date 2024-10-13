@@ -82,6 +82,13 @@ class PPMSSim(ZMQInstrument):
             return current_temp == target_temp
         return False
 
+    def settemp_async(self, temp_params) -> None:
+        """Initiate the temperature ramp asynchronously without blocking."""
+        param = {'Temperature (K)': temp_params[0], 
+                'Rate (K/min)': temp_params[1]}
+        self._send_command('Set Temperature', param)
+        print(f"Initiating temperature ramp to {temp_params[0]} K at {temp_params[1]} K/min")
+
     def _field_getter(
         self,
         param_name: Literal[
