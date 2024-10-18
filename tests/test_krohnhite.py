@@ -2,16 +2,20 @@
 import sys
 import os
 from config_watcher import get_latest_config
+from config_watcher import push_config_to_db
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from levylabinst.KrohnHite import KrohnHite
 kh_address = 'tcp://localhost:29160'
 
-# %% Database handling
+# %% Database handling 
 latest_config_data = get_latest_config()
 kh_config_info = latest_config_data.get('kh_config_info', [])
 # TODO: Fix error with the config dictionary
 
 kh = KrohnHite('kh', kh_address, config={'kh_config_info': kh_config_info})
+
+# %% Database handling 
+push_config_to_db()
 
 #%%
 kh._send_command("HELP")
