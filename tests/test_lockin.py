@@ -13,7 +13,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from levylabinst import MCLockin
 from levylabinst.dashboard import Dashboard
 lockin_address = 'tcp://localhost:29170'
-# %% Database handling
+
+# %% Database handling (Reitrieve the data from database)
 latest_config_data = get_latest_config()
 
 # Use the latest config data
@@ -28,7 +29,7 @@ if 'lockin' in qc.Instrument._all_instruments:
 
 lockin = MCLockin('lockin', lockin_address, config={'lockin_config_info': lockin_config})
 
-# %%
+# %% Database handling (Push the data to database)
 push_config_to_db()
 
 # %%
