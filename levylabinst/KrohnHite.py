@@ -120,24 +120,19 @@ class KrohnHite(ZMQInstrument):
             print("Config reloaded successfully.")
         except Exception as e:
             print(f"Failed to reload configuration: {e}")
-
-    def set_all_channels(self, channels_config: list[dict]) -> dict:
+    
+    def set_all_channels(self, channels_config: list[dict]) -> Dict:
         """
         Set the configuration for all channels.
         channels_config is a list of dictionaries where each dictionary has keys:
         'channel', 'gain', 'input', 'shunt', 'couple', 'filter'.
         """
-
-        for channel_config in channels_config:
-            channel = channel_config['channel']
-            gain = channel_config['gain']
-            input_mode = channel_config['input']
-            shunt = channel_config['shunt']
-            couple = channel_config['couple']
-            filter = channel_config['filter']
             
         # Validate and set all channels
-        return self._send_command('setAllChannels', channels_config)
+        print("Sending ZMQ command with configuration:", channels_config)
+        response = self._send_command('setAllChannels', channels_config)
+        print("Response from simulator:", response)
+        return response
 
     def get_all_channels(self) -> list[dict]:
         """
@@ -146,7 +141,53 @@ class KrohnHite(ZMQInstrument):
         'channel', 'gain', 'input', 'shunt', 'couple', 'filter'.
         """
         response = self._send_command('getAllChannels')
+        print("Raw response from getAllChannels:", response)
         return response.get('result', [])
+    
+    def set_channel(self, channel_number: int) -> Dict:
+        """
+        Set the configuration for a specific channel.
+        The channel number is provided, and the function retrieves the config from kh_config_info.
+        """
+        # Find the configuration for the specific channel
+        channel_config = next((ch for ch in self.config['kh_config_info'] if ch['channel'] == channel_number), None)
+
+        if channel_config is None:
+            raise ValueError(f"Channel {channel_number} configuration not found.")
+
+        # Extract the channel parameters
+        params = {
+            "channel": channel_config['channel'],
+            "gain": channel_config['gain'],
+            "input": channel_config['input'],
+            "shunt": channel_config['shunt'],
+            "couple": channel_config['couple'],
+            "filter": channel_config['filter']
+        }
+
+        # Send the command via ZMQ
+        print(f"Sending ZMQ command to set channel {channel_number} with configuration: {params}")
+        response = self._send_command("setChannel", params)
+        print(f"Response from simulator/device: {response}")
+        return response
+    
+    def get_channel(self, channel_number: int) -> dict:
+        """
+        Get the configuration for a specific channel.
+        The channel number is provided, and this method sends a 'getChannel' request.
+        """
+        # Construct the parameters  for getting the channel config
+        params = {
+            "channel": channel_number
+        }
+
+        # Send the command via ZMQ and retrieve the response
+        print(f"Sending ZMQ command to get channel {channel_number} configuration: {params}")
+        response = self._send_command("getChannel", params)
+        print(f"Response from simulator/device: {response}")
+
+        # Return the result (channel configuration) from the response
+        return response.get('result', {})
     
     def get_idn(self) -> dict[str, Optional[str]]:
         idn_info = super().get_idn()  # Reuse the parent method

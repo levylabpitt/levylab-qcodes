@@ -15,7 +15,7 @@
         },
         {
             "channel": 2,
-            "gain": 1000,
+            "gain": 100,
             "input": "DIFF",
             "shunt": 50,
             "couple": "DC",
