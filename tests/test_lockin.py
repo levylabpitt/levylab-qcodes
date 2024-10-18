@@ -8,6 +8,7 @@ import numpy as np
 import zmq
 from datetime import datetime
 from config_watcher import get_latest_config
+from config_watcher import push_config_to_db
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from levylabinst import MCLockin
 from levylabinst.dashboard import Dashboard
@@ -28,6 +29,9 @@ if 'lockin' in qc.Instrument._all_instruments:
 lockin = MCLockin('lockin', lockin_address, config={'lockin_config_info': lockin_config})
 
 # %%
+push_config_to_db()
+
+# %%
 dashboard = Dashboard(lockin_config_info=lockin_config, 
     kh_config_info=kh_config_info, 
     wirebonding_info=wirebonding_info, 
@@ -35,7 +39,7 @@ dashboard = Dashboard(lockin_config_info=lockin_config,
 dashboard.launch()
 
 # %%
-lockin.source_Amp(6)
+lockin.source_Amp(0.06)
 
 # %%
 lockin.reset_all_parameters()
