@@ -14,7 +14,7 @@
             "filter": "ON"
         },
         {
-            "channel": 3,
+            "channel": 2,
             "gain": 100,
             "input": "DIFF",
             "shunt": 50,
