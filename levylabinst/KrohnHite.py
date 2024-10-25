@@ -181,10 +181,7 @@ class KrohnHite(ZMQInstrument):
             "channel": channel_number
         }
 
-        # Send the command via ZMQ and retrieve the response
-        print(f"Sending ZMQ command to get channel {channel_number} configuration: {params}")
         response = self._send_command("getChannel", params)
-        print(f"Response from simulator/device: {response}")
 
         # Return the result (channel configuration) from the response
         return response.get('result', {})
