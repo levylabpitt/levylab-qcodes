@@ -10,7 +10,6 @@ kh_address = 'tcp://localhost:29160'
 # %% Database handling 
 latest_config_data = get_latest_config()
 kh_config_info = latest_config_data.get('kh_config_info', [])
-# TODO: Fix error with the config dictionary
 
 kh = KrohnHite('kh', kh_address, config={'kh_config_info': kh_config_info})
 

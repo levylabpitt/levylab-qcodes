@@ -6,7 +6,7 @@
     },
     "kh_config_info": [
         {
-            "channel": 1,
+            "channel": 3,
             "gain": 10,
             "input": "SE+",
             "shunt": 500,
