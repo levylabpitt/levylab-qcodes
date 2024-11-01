@@ -250,52 +250,54 @@ class MCLockin(ZMQInstrument):
         ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
         dfai = pd.DataFrame(ai_array).transpose()
         print(dfai)
-        dfai.to_csv('/Users/SoumyaR/Documents/Data/Sweep AI data.csv')
+        #dfai.to_csv('/Users/SoumyaR/Documents/Data/Sweep AI data.csv')
         plt.plot(dfai)
         plt.title('Sweep AI')
         plt.xlabel('Samples')
         plt.ylabel('Sweep AI (V)')
         plt.show()
-        plt.savefig("Sweep AI.png", dpi=500)
+        #plt.savefig("Sweep AI.png", dpi=500)
 
     def _plot_SweepAO(self) -> None:
         data = self._get_sweep_data()
         ao_array = [entry['Y'] for entry in data['result']['AO_wfm']]
         dfao = pd.DataFrame(ao_array).transpose()
         print(dfao)
-        dfao.to_csv('/Users/SoumyaR/Documents/Data/Sweep AO data.csv')
+        #dfao.to_csv('/Users/SoumyaR/Documents/Data/Sweep AO data.csv')
         plt.plot(dfao)
         plt.title('Sweep AO')
         plt.xlabel('Samples')
         plt.ylabel('Sweep AO (V)')
         plt.show()
-        plt.savefig("Sweep AO.png", dpi=500)
+        #plt.savefig("Sweep AO.png", dpi=500)
 
     def _plot_SweepY(self) -> None:
         data = self._get_sweep_data()
         y_array = [entry['Y'] for entry in data['result']['Y_wfm']]
         dfy = pd.DataFrame(y_array).transpose()
         print(dfy)
-        dfy.to_csv('/Users/SoumyaR/Documents/Data/Sweep Y data.csv')
+        #dfy.to_csv('/Users/SoumyaR/Documents/Data/Sweep Y data.csv')
         plt.plot(dfy)
         plt.title('Sweep Y')
         plt.xlabel('Samples')
         plt.ylabel('Sweep Y results (V)')
         plt.show()
-        plt.savefig("Sweep Y.png", dpi=500)
+        #plt.savefig("Sweep Y.png", dpi=500)
 
     def _plot_SweepX(self) -> None:
         data = self._get_sweep_data()
         x_array = [entry['Y'] for entry in data['result']['X_wfm']]
         dfx = pd.DataFrame(x_array).transpose()
         print(dfx)
-        dfx.to_csv('/Users/SoumyaR/Documents/Data/Sweep X data.csv')
+        #dfx.to_csv('/Users/SoumyaR/Documents/Data/Sweep X data.csv')
         plt.plot(dfx)
         plt.title('Sweep X')
         plt.xlabel('Samples')
         plt.ylabel('Sweep X results (V)')
         plt.show()
-        plt.savefig("Sweep X.png", dpi=500)
+        #plt.savefig("Sweep X.png", dpi=500)
+
+    
 
     
 
@@ -368,8 +370,8 @@ class MCLockin(ZMQInstrument):
             "Roll-Off": ref[4]
             })
 
-        param = {"Channels: Lockin in":ref_configs_list}
-
+        param = ref_configs_list
+        print(param)
         self._send_command('setREF',param)
 
     def _set_DAQ(self, DAQ_configs: list) -> None:
@@ -389,6 +391,13 @@ class MCLockin(ZMQInstrument):
 
         self._send_command('setDAQ', param)
 
+    def _set_sampling_mode(self, mode: str) -> None:
+        '''
+        
+        '''
+        param = mode
+        self._send_command('setSamplingMode', param)
+
     def _set_sampling(self, FS: float, s: float) -> None:
         param = {'Fs': FS, '#s':s}
         self._send_command('setSampling',param)
@@ -396,6 +405,70 @@ class MCLockin(ZMQInstrument):
     def _set_REF_frequency(self, REFch: float, freq: float) -> None:
         param = {'REF Channel':REFch, 'Frequency (Hz)': freq}
         self._send_command('setREF_Frequency',param)
+
+    def _set_REF_phase(self, REFch: float, phase: float) -> None:
+        param = {'REF Channel': REFch, 'Phase (°)': phase} 
+        self._send_command('setREF_Phase',param)
+
+    def _set_REF_TC(self, REFch: float, TC: float) -> None:
+        param = {'REF Channel': REFch, 'TC (s)':TC}
+        self._send_command('setREF_TC',param) #this should be setREF_TC, but it is frequency in the orginal API file
+
+    def _set_REF_RollOff(self, REFch: float, RollOff: float) -> None:
+        param = {'REF Channel': REFch, 'Roll-Off':RollOff}
+        self._send_command('setREF_Roll-Off', param)
+
+
+    def _data_sweepX1(self) -> None:
+        data = self._get_sweep_data()
+        x_array = [entry['Y'] for entry in data['result']['X_wfm']]
+        dfx = pd.DataFrame(x_array).transpose()
+        xai1 = dfx[0]
+        return xai1
+    
+    def _data_sweepX1_plot(self) -> None:
+        data = self._get_sweep_data()
+        x_array = [entry['Y'] for entry in data['result']['X_wfm']]
+        dfx = pd.DataFrame(x_array).transpose()
+        print(dfx[0])
+        plt.plot(dfx[0])
+        plt.title('Sweep X')
+        plt.xlabel('Samples')
+        plt.ylabel('Sweep X results (V)')
+        plt.show()
+    
+    #for 2d sweeps
+
+    def _sweep_2d_X1_plots(self, Magnetic_fields: list,  channel_configs: list, initial_wait: float, sweep_time: float) -> None:
+        for field in Magnetic_fields:
+            self._set_1dsweepconfig(channel_configs, initial_wait, sweep_time)
+            self._sweep_process()
+            self._data_sweepX1_plot()
+
+    def _sweep_2d_X1(self, Magnetic_fields: list,  channel_configs: list, initial_wait: float, sweep_time: float) -> None:
+        X1  = []
+        for field in Magnetic_fields:
+            self._set_1dsweepconfig(channel_configs, initial_wait, sweep_time)
+            self._sweep_process()
+            x1 = self._data_sweepX1()
+            x1array = np.array(x1)
+            X1.append(x1array)
+        return X1
+    
+
+            
+
+            
+            
+    
+            
+
+    
+    
+    
+
+        
+    
 
 
    

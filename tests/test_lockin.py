@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -58,6 +59,56 @@ lockin._plot_SweepX()
 
 #%% Getting Sweep Y data
 lockin._plot_SweepY()
+
+#%%2d sweep configurations
+B = [1,1.5,2,2.5] #Magnetic field
+
+#sweep configurations
+sweep_config = [[2,0,0.1,"Ramp /"]]
+
+
+#%% 2dsweep & storing channel 1 of sweep X results
+X1 = lockin._sweep_2d_X1(B,sweep_config,5,6)
+
+#print(X1)
+
+#%% 3d plotting
+fig = plt.figure()
+ax = fig.add_subplot(111, projection= '3d')
+
+n = len(X1[0])
+xlist = np.linspace(0,n-1,n)
+xarray = np.array(xlist)
+
+x1 = xarray
+y1 = X1[0]
+z1 = np.full(n,B[0])
+
+x2 = xarray
+y2 = X1[1]
+z2 = np.full(n,B[1])
+
+x3 = xarray
+y3 = X1[2]
+z3 = np.full(n,B[2])
+
+x4 = xarray
+y4 = X1[3]
+z4 = np.full(n,B[3])
+
+ax.scatter(x1, y1, z1, c='k', marker = '*')
+ax.scatter(x2, y2, z2, c='r', marker = '*')
+ax.scatter(x3, y3, z3, c='b', marker = '*')
+ax.scatter(x4, y4, z4, c='g', marker = '*')
+
+ax.set_xlabel('Samples')
+ax.set_ylabel('AI1')
+ax.set_zlabel('Magnetic field')
+
+plt.show()
+
+
+
 
 #%% Real-time plottting
 '''print(X)
