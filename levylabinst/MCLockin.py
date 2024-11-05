@@ -191,22 +191,37 @@ class MCLockin(ZMQInstrument):
         pass
 
     def _set_amplitude(self, channel: int, value: float) -> None:
+        """
+        This function will set the amplitude value of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the amplitude value.
+        """
         param = {'AO Channel': channel, 'Amplitude (V)': value}
         self._send_command('setAO_Amplitude', param)
 
     def _set_dc(self, channel: int, value: float) -> None:
+        """
+        This function will set the dc value of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the dc value.
+        """
         param = {'AO Channel': channel, 'DC (V)': value}
         self._send_command('setAO_DC', param)
 
     def _set_freq(self, channel: int, value: float) -> None:
+        """
+        This function will set the frequency value of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the frequency value.
+        """
         param = {'AO Channel': channel, 'Frequency (Hz)': value}
         self._send_command('setAO_Frequency', param)
 
     def _set_phase(self, channel: int, value: float) -> None:
+        """
+        This function will set the phase value of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the phase value.
+        """
         param = {'AO Channel': channel, 'Phase (deg)': value}
         self._send_command('setAO_Phase', param)
 
     def _set_func(self, channel: int, value: str) -> None:
+        """
+        This function will set the function type of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the fucntion type.
+        """
         param = {'AO Channel': channel, 'Function': value}
         self._send_command('setAO_Function', param)
     
@@ -217,89 +232,54 @@ class MCLockin(ZMQInstrument):
         results_dict = {item['key']: item['value'] for item in results}
         return results_dict.get(key)
     
-    def _get_sweep_data(self) -> dict: #this function will get the data from the lockin afte sweeping is done. It is based on the API "getsweepdata.VI". All the data from labview are being stored as dictionary (dict).
+    def _get_sweep_data(self) -> dict: 
+        """
+        This fucntion will get the sweep AO/AI and sweep lockin data from the MCLockin after a sweep is completed.
+        """
         response = self._send_command('getSweepWaveforms')
         return response
     
     def _get_state(self) -> dict:
+        """
+        This fucntion will get the status of the state in which the MCLockin is currentlt at.
+        """
         response = self._send_command('getState')
         return response['result']
     
     def _set_state(self, value: str) -> None:
+        """
+        This function will set the status of the MCLockin state from previous to the new one as given by value parameter.
+        """
         param = value
         self._send_command('setState', param)
     
     def _set_sweepTime(self, value: float) -> None:
+        """
+        This function will set the sweeptime as given by the value parameter.
+        """
         param = value
         self._send_command('setSweepTime', param)
 
     def _get_AO(self) -> dict:
+        """
+        This function will get the current parameter configuration of the output channels.
+        """
         response = self._send_command('getAOconfig')
         return response
 
-    def _sweep_yet_starting(self) -> None: #detects when the sweep is actually beginning after start sweep is commanded.
+    def _sweep_yet_starting(self) -> None:
+        """
+        This function checks whether the sweep process has started or not after the user commands MCLockin to sweep.
+        """
         while self._get_state() == 'started':
              time.sleep(0.2) 
 
-    def _sweep_checking(self) -> None:  #continues the sweep process until sweep is completed. 
-         while self._get_state() == 'sweeping':
+    def _sweep_checking(self) -> None:  
+        """
+        This function checks whether the sweep process is completed or not.
+        """
+        while self._get_state() == 'sweeping':
              time.sleep(0.2) 
-
-    def _plot_SweepAI(self) -> None: 
-        data = self._get_sweep_data()
-        ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
-        dfai = pd.DataFrame(ai_array).transpose()
-        print(dfai)
-        #dfai.to_csv('/Users/SoumyaR/Documents/Data/Sweep AI data.csv')
-        plt.plot(dfai)
-        plt.title('Sweep AI')
-        plt.xlabel('Samples')
-        plt.ylabel('Sweep AI (V)')
-        plt.show()
-        #plt.savefig("Sweep AI.png", dpi=500)
-
-    def _plot_SweepAO(self) -> None:
-        data = self._get_sweep_data()
-        ao_array = [entry['Y'] for entry in data['result']['AO_wfm']]
-        dfao = pd.DataFrame(ao_array).transpose()
-        print(dfao)
-        #dfao.to_csv('/Users/SoumyaR/Documents/Data/Sweep AO data.csv')
-        plt.plot(dfao)
-        plt.title('Sweep AO')
-        plt.xlabel('Samples')
-        plt.ylabel('Sweep AO (V)')
-        plt.show()
-        #plt.savefig("Sweep AO.png", dpi=500)
-
-    def _plot_SweepY(self) -> None:
-        data = self._get_sweep_data()
-        y_array = [entry['Y'] for entry in data['result']['Y_wfm']]
-        dfy = pd.DataFrame(y_array).transpose()
-        print(dfy)
-        #dfy.to_csv('/Users/SoumyaR/Documents/Data/Sweep Y data.csv')
-        plt.plot(dfy)
-        plt.title('Sweep Y')
-        plt.xlabel('Samples')
-        plt.ylabel('Sweep Y results (V)')
-        plt.show()
-        #plt.savefig("Sweep Y.png", dpi=500)
-
-    def _plot_SweepX(self) -> None:
-        data = self._get_sweep_data()
-        x_array = [entry['Y'] for entry in data['result']['X_wfm']]
-        dfx = pd.DataFrame(x_array).transpose()
-        print(dfx)
-        #dfx.to_csv('/Users/SoumyaR/Documents/Data/Sweep X data.csv')
-        plt.plot(dfx)
-        plt.title('Sweep X')
-        plt.xlabel('Samples')
-        plt.ylabel('Sweep X results (V)')
-        plt.show()
-        #plt.savefig("Sweep X.png", dpi=500)
-
-    
-
-    
 
     def _set_sweepconfig(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
         '''
@@ -326,6 +306,12 @@ class MCLockin(ZMQInstrument):
 
 
     def _set_1dsweepconfig(self, channel_configs: list, initial_wait: float, sweep_time: float) ->None:
+        """
+        This function sets the sweep configuration for MClockin. It can set the parameter cofiguration for multiple channels.
+        Args:
+            channel_configs: A list contains all the parameter values for mulitple channels. The parameters are
+            start sweep voltage, stop sweep voltage, sweep time, and the sweeping pattern.
+            """
         channel_configs_list = []
         for channel in channel_configs:
             channel_configs_list.append({
@@ -345,10 +331,18 @@ class MCLockin(ZMQInstrument):
         self._send_command('setsweep',param)
 
     def _sweep_11d(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
+        """
+        This function perfoms a single sweep in one channel of MClockin.
+        Args:
+        channel: The channel to set the sweep configuration for
+        start: The start time of the sweep
+        stop: The stop time of the sweep
+        sweep_time: The time of the sweep
+        pattern: The pattern of the sweep
+        """
         self._set_sweepconfig(channel, start, stop, pattern, initial_wait, sweep_time)
         self._set_state('start sweep')
-        self._sweep_yet_starting()
-        self._sweep_checking()
+        self._sweep_process()
         print('sweep completed')
 
     def _sweep_process(self) -> None:
@@ -358,6 +352,9 @@ class MCLockin(ZMQInstrument):
         print('sweep completed')
 
     def _reference(self, ref_configs: list) -> None:
+        """
+        This function set the parameter values of mulitple reference channels for MCLockin.
+        Args: ref_configs contains all the parameters of a reference channel."""
         ref_configs_list = []
 
         for ref in ref_configs:
@@ -373,23 +370,6 @@ class MCLockin(ZMQInstrument):
         param = ref_configs_list
         print(param)
         self._send_command('setREF',param)
-
-    def _set_DAQ(self, DAQ_configs: list) -> None:
-        DAQ_configs_list = []
-
-        for daq in DAQ_configs:
-             DAQ_configs_list.append({
-             "Device": daq[0],
-             "AO.Ch": daq[1],
-             "AO.Range": daq[2],
-             "AI.Ch": daq[3],
-             "AI.Range":daq[4],
-             "AI.Coupling":daq[5]
-             })
-
-        param = {"setDAQ":DAQ_configs_list}
-
-        self._send_command('setDAQ', param)
 
     def _set_sampling_mode(self, mode: str) -> None:
         '''
@@ -439,15 +419,9 @@ class MCLockin(ZMQInstrument):
     
     #for 2d sweeps
 
-    def _sweep_2d_X1_plots(self, Magnetic_fields: list,  channel_configs: list, initial_wait: float, sweep_time: float) -> None:
-        for field in Magnetic_fields:
-            self._set_1dsweepconfig(channel_configs, initial_wait, sweep_time)
-            self._sweep_process()
-            self._data_sweepX1_plot()
-
-    def _sweep_2d_X1(self, Magnetic_fields: list,  channel_configs: list, initial_wait: float, sweep_time: float) -> None:
+    def _sweep_2d_X1(self, extra_dimension: list,  channel_configs: list, initial_wait: float, sweep_time: float) -> None:
         X1  = []
-        for field in Magnetic_fields:
+        for values in extra_dimension:
             self._set_1dsweepconfig(channel_configs, initial_wait, sweep_time)
             self._sweep_process()
             x1 = self._data_sweepX1()

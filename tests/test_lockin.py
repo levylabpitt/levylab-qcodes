@@ -48,6 +48,61 @@ lockin._set_1dsweepconfig(sweep_config,5,6)
 #%%sweeping
 lockin._sweep_process()
 
+
+#%% Defining the plotting functions
+def _plot_SweepAI(self) -> None: 
+        data = lockin._get_sweep_data()
+        ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
+        dfai = pd.DataFrame(ai_array).transpose()
+        print(dfai)
+        #dfai.to_csv('/Users/SoumyaR/Documents/Data/Sweep AI data.csv')
+        plt.plot(dfai)
+        plt.title('Sweep AI')
+        plt.xlabel('Samples')
+        plt.ylabel('Sweep AI (V)')
+        plt.show()
+        #plt.savefig("Sweep AI.png", dpi=500)
+
+
+def _plot_SweepAO(self) -> None:
+        data = lockin._get_sweep_data()
+        ao_array = [entry['Y'] for entry in data['result']['AO_wfm']]
+        dfao = pd.DataFrame(ao_array).transpose()
+        print(dfao)
+        #dfao.to_csv('/Users/SoumyaR/Documents/Data/Sweep AO data.csv')
+        plt.plot(dfao)
+        plt.title('Sweep AO')
+        plt.xlabel('Samples')
+        plt.ylabel('Sweep AO (V)')
+        plt.show()
+        #plt.savefig("Sweep AO.png", dpi=500)
+
+def _plot_SweepY(self) -> None:
+        data = lockin._get_sweep_data()
+        y_array = [entry['Y'] for entry in data['result']['Y_wfm']]
+        dfy = pd.DataFrame(y_array).transpose()
+        print(dfy)
+        #dfy.to_csv('/Users/SoumyaR/Documents/Data/Sweep Y data.csv')
+        plt.plot(dfy)
+        plt.title('Sweep Y')
+        plt.xlabel('Samples')
+        plt.ylabel('Sweep Y results (V)')
+        plt.show()
+        #plt.savefig("Sweep Y.png", dpi=500)
+
+def _plot_SweepX(self) -> None:
+        data = lockin._get_sweep_data()
+        x_array = [entry['Y'] for entry in data['result']['X_wfm']]
+        dfx = pd.DataFrame(x_array).transpose()
+        print(dfx)
+        #dfx.to_csv('/Users/SoumyaR/Documents/Data/Sweep X data.csv')
+        plt.plot(dfx)
+        plt.title('Sweep X')
+        plt.xlabel('Samples')
+        plt.ylabel('Sweep X results (V)')
+        plt.show()
+        #plt.savefig("Sweep X.png", dpi=500) 
+
 #%% Getting AI Data
 lockin._plot_SweepAI()
 
@@ -67,7 +122,7 @@ B = [1,1.5,2,2.5] #Magnetic field
 sweep_config = [[2,0,0.1,"Ramp /"]]
 
 
-#%% 2dsweep & storing channel 1 of sweep X results
+#%% 2dsweep & getting channel 1 of sweep X results
 X1 = lockin._sweep_2d_X1(B,sweep_config,5,6)
 
 #print(X1)
