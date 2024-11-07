@@ -37,16 +37,21 @@ def real_time_plotting(self, refresh time):
 #Check lock-in status
 lockin.state()
 
-#%% Sweep configuration
+
+#%% Single sweep
+lockin.sweep(1,0,0.1,"Ramp /",5,6,2)
+
+
+
+#%% Sweep configuration for multiple sweep
 sweep_config = [[1,0.08,0.15,"Ramp /"],
                 [2,0.04,0.10,"Smooth Ramp _/"],
                 [3,0.09,0.17,"Table",[1,3,5,7]],
                 [4,0.05,0.20,"Smooth Ramp _/"]]
 
-lockin._set_1dsweepconfig(sweep_config,5,6)
 
-#%%sweeping
-lockin._sweep_process()
+#%% Mutliple sweep
+lockin.multisweep(sweep_config,5,6,None)
 
 
 #%% Defining the plotting functions
@@ -62,7 +67,6 @@ def _plot_SweepAI(self) -> None:
         plt.ylabel('Sweep AI (V)')
         plt.show()
         #plt.savefig("Sweep AI.png", dpi=500)
-
 
 def _plot_SweepAO(self) -> None:
         data = lockin._get_sweep_data()
@@ -161,31 +165,6 @@ ax.set_ylabel('AI1')
 ax.set_zlabel('Magnetic field')
 
 plt.show()
-
-
-
-
-#%% Real-time plottting
-'''print(X)
-print(Y)
-'''
-#%%Real-time plotting
-'''npt = len(X)
-
-tpoints = np.linspace(1, len(X), len(X))
-tarray = np.array(tpoints)
-
-print(tarray)
-
-plt.plot(tarray, X, label = 'X', marker = 'o')
-plt.plot(tarray, Y, label = 'Y', marker = 'o')
-plt.title('real-time plotting during sweeping')
-plt.xlabel('points')
-plt.ylabel('X(V) and Y(V)')
-plt.legend()
-plt.show()
-plt.savefig("real-time plotting.png")
-'''
 
 
 

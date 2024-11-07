@@ -281,6 +281,34 @@ class MCLockin(ZMQInstrument):
         while self._get_state() == 'sweeping':
              time.sleep(0.2) 
 
+    def _data_extraction(self, extract_channel=None):
+        """
+        This function will extract the sweep data of a particular output channel given by the extract_channel parameter.
+        By default, the extract_channel parameter is set to None which corresponds to extraction of the sweep data of all
+        output channels.
+        """
+        data = self._get_sweep_data()
+        ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
+        dfai = pd.DataFrame(ai_array).transpose()
+        ao_array = [entry['Y'] for entry in data['result']['AO_wfm']]
+        dfao = pd.DataFrame(ao_array).transpose()
+        y_array = [entry['Y'] for entry in data['result']['Y_wfm']]
+        dfy = pd.DataFrame(y_array).transpose()
+        x_array = [entry['Y'] for entry in data['result']['X_wfm']]
+        dfx = pd.DataFrame(x_array).transpose()
+        if extract_channel == None:
+            print(dfai)
+            print(dfao)
+            print(dfx)
+            print(dfy)
+            print("extracted everything")
+        else:
+            print(dfai[extract_channel - 1])
+            print(dfao[extract_channel - 1])
+            print(dfx[extract_channel - 1])
+            print(dfy[extract_channel - 1])
+            print('extracted the specified channel')
+
     def _set_sweepconfig(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
         '''
         Sets the sweep configuration for the lock-in
@@ -311,6 +339,7 @@ class MCLockin(ZMQInstrument):
         Args:
             channel_configs: A list contains all the parameter values for mulitple channels. The parameters are
             start sweep voltage, stop sweep voltage, sweep time, and the sweeping pattern.
+        This type of sweeps is called as "1-dimensional sweeps".
             """
         channel_configs_list = []
         for channel in channel_configs:
@@ -330,31 +359,48 @@ class MCLockin(ZMQInstrument):
 
         self._send_command('setsweep',param)
 
-    def _sweep_11d(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
-        """
-        This function perfoms a single sweep in one channel of MClockin.
-        Args:
-        channel: The channel to set the sweep configuration for
-        start: The start time of the sweep
-        stop: The stop time of the sweep
-        sweep_time: The time of the sweep
-        pattern: The pattern of the sweep
-        """
-        self._set_sweepconfig(channel, start, stop, pattern, initial_wait, sweep_time)
-        self._set_state('start sweep')
-        self._sweep_process()
-        print('sweep completed')
-
     def _sweep_process(self) -> None:
         self._set_state('start sweep')
         self._sweep_yet_starting()
         self._sweep_checking()
         print('sweep completed')
 
+    def sweep(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float, extract: float) -> None:
+        """
+        This function perfoms a single sweep in one channel of MClockin.
+        Args:
+        channel: The channel to set the sweep configuration for
+        start: The start time of the sweep
+        stop: The stop time of the sweep
+        pattern: The pattern of the sweep
+        initial_wait: wait time before sweeping starts
+        sweep_time: The time of the sweep
+        extract: output channel no. 
+        """
+        self._set_sweepconfig(channel, start, stop, pattern, initial_wait, sweep_time)
+        self._sweep_process()
+        self._data_extraction(extract)
+
+
+    def multisweep(self, channel_configs: list, initial_wait: float, sweep_time: float, extract: float) -> None:
+        """
+        This function performs sweep in mutliple channels of MCLockin.
+        Args:
+        channel_configs: The values of parameters in multiple channels to set the sweep configuration
+        initial_wait: wait time before sweeping starts
+        sweep_time: The time of the sweep
+        extract: output channel no.         
+        """
+        self._set_1dsweepconfig(channel_configs,initial_wait,sweep_time)
+        self._sweep_process()
+        self._data_extraction(extract)
+
     def _reference(self, ref_configs: list) -> None:
         """
         This function set the parameter values of mulitple reference channels for MCLockin.
-        Args: ref_configs contains all the parameters of a reference channel."""
+        Args: ref_configs contains all the parameters of a reference channel.
+        The parameters are Channel no., Frequency, Phase, TC and Roll-Off.
+        """
         ref_configs_list = []
 
         for ref in ref_configs:
@@ -379,55 +425,57 @@ class MCLockin(ZMQInstrument):
         self._send_command('setSamplingMode', param)
 
     def _set_sampling(self, FS: float, s: float) -> None:
+        """
+        This function set the sampling rate and no. of samples as given by the FS and s parameters respectively. 
+        """
         param = {'Fs': FS, '#s':s}
         self._send_command('setSampling',param)
 
     def _set_REF_frequency(self, REFch: float, freq: float) -> None:
+        """
+        This function will set the value for frequency of a reference channel given by the parameters- REFch and freq. 
+        REFch specifies the channel no. and freq specifies the frequency value.
+        """
         param = {'REF Channel':REFch, 'Frequency (Hz)': freq}
         self._send_command('setREF_Frequency',param)
 
     def _set_REF_phase(self, REFch: float, phase: float) -> None:
+        """
+        This function will set the value for phase of a reference channel given by the parameters- REFch and phase.
+        REFch specifies the channel no. and phase specifies the phase value.
+        """
         param = {'REF Channel': REFch, 'Phase (°)': phase} 
         self._send_command('setREF_Phase',param)
 
     def _set_REF_TC(self, REFch: float, TC: float) -> None:
+        """
+        This function will set the value for Time Constant (TC) of a reference channel by the parameters- REFch and TC.
+        REFch specifies the channel no. and TC specifies the Time constant value.
+        """
         param = {'REF Channel': REFch, 'TC (s)':TC}
         self._send_command('setREF_TC',param) #this should be setREF_TC, but it is frequency in the orginal API file
 
     def _set_REF_RollOff(self, REFch: float, RollOff: float) -> None:
+        """
+        This function will set the value for Order of a reference channel by the parameters- REFch and Roll-Off.
+        REFch specifies the channel no. and Roll-Off specifies the order value.
+        """
         param = {'REF Channel': REFch, 'Roll-Off':RollOff}
         self._send_command('setREF_Roll-Off', param)
 
 
     def _data_sweepX1(self) -> None:
+        """
+        This function will give the sweep X data after the sweep is completed.
+        """
         data = self._get_sweep_data()
         x_array = [entry['Y'] for entry in data['result']['X_wfm']]
         dfx = pd.DataFrame(x_array).transpose()
         xai1 = dfx[0]
         return xai1
     
-    def _data_sweepX1_plot(self) -> None:
-        data = self._get_sweep_data()
-        x_array = [entry['Y'] for entry in data['result']['X_wfm']]
-        dfx = pd.DataFrame(x_array).transpose()
-        print(dfx[0])
-        plt.plot(dfx[0])
-        plt.title('Sweep X')
-        plt.xlabel('Samples')
-        plt.ylabel('Sweep X results (V)')
-        plt.show()
     
-    #for 2d sweeps
-
-    def _sweep_2d_X1(self, extra_dimension: list,  channel_configs: list, initial_wait: float, sweep_time: float) -> None:
-        X1  = []
-        for values in extra_dimension:
-            self._set_1dsweepconfig(channel_configs, initial_wait, sweep_time)
-            self._sweep_process()
-            x1 = self._data_sweepX1()
-            x1array = np.array(x1)
-            X1.append(x1array)
-        return X1
+    
     
 
             
