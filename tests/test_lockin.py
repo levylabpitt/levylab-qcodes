@@ -38,11 +38,6 @@ def real_time_plotting(self, refresh time):
 lockin.state()
 
 
-#%% Single sweep
-lockin.sweep(1,0,0.1,"Ramp /",5,6,2)
-
-
-
 #%% Sweep configuration for multiple sweep
 sweep_config = [[1,0.08,0.15,"Ramp /"],
                 [2,0.04,0.10,"Smooth Ramp _/"],
@@ -54,82 +49,18 @@ sweep_config = [[1,0.08,0.15,"Ramp /"],
 lockin.multisweep(sweep_config,5,6,None)
 
 
-#%% Defining the plotting functions
-def _plot_SweepAI(self) -> None: 
-        data = lockin._get_sweep_data()
-        ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
-        dfai = pd.DataFrame(ai_array).transpose()
-        print(dfai)
-        #dfai.to_csv('/Users/SoumyaR/Documents/Data/Sweep AI data.csv')
-        plt.plot(dfai)
-        plt.title('Sweep AI')
-        plt.xlabel('Samples')
-        plt.ylabel('Sweep AI (V)')
-        plt.show()
-        #plt.savefig("Sweep AI.png", dpi=500)
+#%% 2dsweep
+X1 = [] #for storing the sweep results
 
-def _plot_SweepAO(self) -> None:
-        data = lockin._get_sweep_data()
-        ao_array = [entry['Y'] for entry in data['result']['AO_wfm']]
-        dfao = pd.DataFrame(ao_array).transpose()
-        print(dfao)
-        #dfao.to_csv('/Users/SoumyaR/Documents/Data/Sweep AO data.csv')
-        plt.plot(dfao)
-        plt.title('Sweep AO')
-        plt.xlabel('Samples')
-        plt.ylabel('Sweep AO (V)')
-        plt.show()
-        #plt.savefig("Sweep AO.png", dpi=500)
-
-def _plot_SweepY(self) -> None:
-        data = lockin._get_sweep_data()
-        y_array = [entry['Y'] for entry in data['result']['Y_wfm']]
-        dfy = pd.DataFrame(y_array).transpose()
-        print(dfy)
-        #dfy.to_csv('/Users/SoumyaR/Documents/Data/Sweep Y data.csv')
-        plt.plot(dfy)
-        plt.title('Sweep Y')
-        plt.xlabel('Samples')
-        plt.ylabel('Sweep Y results (V)')
-        plt.show()
-        #plt.savefig("Sweep Y.png", dpi=500)
-
-def _plot_SweepX(self) -> None:
-        data = lockin._get_sweep_data()
-        x_array = [entry['Y'] for entry in data['result']['X_wfm']]
-        dfx = pd.DataFrame(x_array).transpose()
-        print(dfx)
-        #dfx.to_csv('/Users/SoumyaR/Documents/Data/Sweep X data.csv')
-        plt.plot(dfx)
-        plt.title('Sweep X')
-        plt.xlabel('Samples')
-        plt.ylabel('Sweep X results (V)')
-        plt.show()
-        #plt.savefig("Sweep X.png", dpi=500) 
-
-#%% Getting AI Data
-lockin._plot_SweepAI()
-
-#%% Getting AO data
-lockin._plot_SweepAO()
-
-#%% Getting Sweep X data
-lockin._plot_SweepX()
-
-#%% Getting Sweep Y data
-lockin._plot_SweepY()
-
-#%%2d sweep configurations
 B = [1,1.5,2,2.5] #Magnetic field
 
-#sweep configurations
-sweep_config = [[2,0,0.1,"Ramp /"]]
+for values in B: 
+       x = lockin.sweep(2,0,0.1,"Ramp /",5,6,1) 
+       X1.append(x[2]) 
+        
 
-
-#%% 2dsweep & getting channel 1 of sweep X results
-X1 = lockin._sweep_2d_X1(B,sweep_config,5,6)
-
-#print(X1)
+#%%Print X1
+print(X1)
 
 #%% 3d plotting
 fig = plt.figure()
@@ -166,5 +97,8 @@ ax.set_zlabel('Magnetic field')
 
 plt.show()
 
+#%% Intensity plotting
 
 
+
+# %%

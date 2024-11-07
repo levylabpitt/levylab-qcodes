@@ -227,8 +227,7 @@ class MCLockin(ZMQInstrument):
     
     def _get_lockin(self, value: str, channel: int) -> float:
         """
-        This function defines a general method to construct other getter functions associated with MCLockin.
-        It has two parameters- value & channel. [function body]
+        
         """
         key = f"AI{channel}.Ref{self._ref_channel}.{value}"
         response = self._send_command('getResults')
@@ -289,7 +288,9 @@ class MCLockin(ZMQInstrument):
         """
         This function will extract the sweep data of a particular output channel given by the extract_channel parameter.
         By default, the extract_channel parameter is set to None which corresponds to extraction of the sweep data of all
-        output channels.
+        output channels. This function returns a general outoput array containing the sweep AI, sweep AO, sweeping results X(V) & 
+        sweeping results Y(V) arrays. So, the sweep AI array, the sweep AO array, the sweeping results X(V) array & the sweeping results Y(V)
+        are the 0-index, 1-index, 2-index & 3-index elements respectively of the general output array. 
         """
         data = self._get_sweep_data()
         ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
@@ -301,17 +302,11 @@ class MCLockin(ZMQInstrument):
         x_array = [entry['Y'] for entry in data['result']['X_wfm']]
         dfx = pd.DataFrame(x_array).transpose()
         if extract_channel == None:
-            print(dfai)
-            print(dfao)
-            print(dfx)
-            print(dfy)
             print("extracted everything")
+            return [np.array(dfai), np.array(dfao), np.array(dfx), np.array(dfy)]
         else:
-            print(dfai[extract_channel - 1])
-            print(dfao[extract_channel - 1])
-            print(dfx[extract_channel - 1])
-            print(dfy[extract_channel - 1])
             print('extracted the specified channel')
+            return [np.array(dfai[extract_channel - 1]), np.array(dfao[extract_channel - 1]), np.array(dfx[extract_channel - 1]), np.array(dfy[extract_channel - 1])]
 
     def _set_sweepconfig(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
         '''
@@ -374,7 +369,9 @@ class MCLockin(ZMQInstrument):
 
     def sweep(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float, extract: float) -> None:
         """
-        This function perfoms a single sweep in one channel of MClockin.
+        This function perfoms a single sweep in one channel of MClockin. This function returns a general outoput array containing the sweep AI, sweep AO, sweeping results X(V) & 
+        sweeping results Y(V) arrays. So, the sweep AI array, the sweep AO array, the sweeping results X(V) array & the sweeping results Y(V)
+        are the 0-index, 1-index, 2-index & 3-index elements respectively of the general output array.
         Args:
         channel: The channel to set the sweep configuration for
         start: The start time of the sweep
@@ -383,24 +380,29 @@ class MCLockin(ZMQInstrument):
         initial_wait: wait time before sweeping starts
         sweep_time: The time of the sweep
         extract: output channel no. 
+         
         """
         self._set_sweepconfig(channel, start, stop, pattern, initial_wait, sweep_time)
         self._sweep_process()
-        self._data_extraction(extract)
+        swd = self._data_extraction(extract)
+        return swd
 
 
     def multisweep(self, channel_configs: list, initial_wait: float, sweep_time: float, extract: float) -> None:
         """
-        This function performs sweep in mutliple channels of MCLockin.
+        This function performs sweep in mutliple channels of MCLockin. This function returns a general outoput array containing the sweep AI, sweep AO, sweeping results X(V) & 
+        sweeping results Y(V) arrays. So, the sweep AI array, the sweep AO array, the sweeping results X(V) array & the sweeping results Y(V)
+        are the 0-index, 1-index, 2-index & 3-index elements respectively of the general output array.
         Args:
         channel_configs: The values of parameters in multiple channels to set the sweep configuration
         initial_wait: wait time before sweeping starts
         sweep_time: The time of the sweep
-        extract: output channel no.         
+        extract: output channel no.    
         """
         self._set_1dsweepconfig(channel_configs,initial_wait,sweep_time)
         self._sweep_process()
-        self._data_extraction(extract)
+        swd = self._data_extraction(extract)
+        return swd
 
     def _reference(self, ref_configs: list) -> None:
         """
@@ -465,15 +467,7 @@ class MCLockin(ZMQInstrument):
         self._send_command('setREF_Roll-Off', param)
 
 
-    def _data_sweepX1(self) -> None:
-        """
-        This function will give the sweep results X (V) data after the sweep is completed.
-        """
-        data = self._get_sweep_data()
-        x_array = [entry['Y'] for entry in data['result']['X_wfm']]
-        dfx = pd.DataFrame(x_array).transpose()
-        xai1 = dfx[0]
-        return xai1
+    
     
     
     
