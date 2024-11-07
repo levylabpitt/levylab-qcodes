@@ -220,12 +220,16 @@ class MCLockin(ZMQInstrument):
 
     def _set_func(self, channel: int, value: str) -> None:
         """
-        This function will set the function type of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the fucntion type.
+        This function will set the function type of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the function type.
         """
         param = {'AO Channel': channel, 'Function': value}
         self._send_command('setAO_Function', param)
     
     def _get_lockin(self, value: str, channel: int) -> float:
+        """
+        This function defines a general method to construct other getter functions associated with MCLockin.
+        It has two parameters- value & channel. [function body]
+        """
         key = f"AI{channel}.Ref{self._ref_channel}.{value}"
         response = self._send_command('getResults')
         results = response['result']['Results (Dictionary)']
@@ -234,14 +238,14 @@ class MCLockin(ZMQInstrument):
     
     def _get_sweep_data(self) -> dict: 
         """
-        This fucntion will get the sweep AO/AI and sweep lockin data from the MCLockin after a sweep is completed.
+        This function will get the sweep AO/AI and sweep lockin data from the MCLockin after a sweep is completed.
         """
         response = self._send_command('getSweepWaveforms')
         return response
     
     def _get_state(self) -> dict:
         """
-        This fucntion will get the status of the state in which the MCLockin is currentlt at.
+        This function will get the status of the state in which the MCLockin is currently operating at.
         """
         response = self._send_command('getState')
         return response['result']
@@ -253,7 +257,7 @@ class MCLockin(ZMQInstrument):
         param = value
         self._send_command('setState', param)
     
-    def _set_sweepTime(self, value: float) -> None:
+    def _set_sweeptime(self, value: float) -> None:
         """
         This function will set the sweeptime as given by the value parameter.
         """
@@ -311,8 +315,8 @@ class MCLockin(ZMQInstrument):
 
     def _set_sweepconfig(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float) -> None:
         '''
-        Sets the sweep configuration for the lock-in
-        Currently only supports one channel
+        This function sets the sweep configuration for the MCLockin
+        to do a sweep in a single channel. 
         Args:
             channel: The channel to set the sweep configuration for
             start: The start time of the sweep
@@ -335,12 +339,12 @@ class MCLockin(ZMQInstrument):
 
     def _set_1dsweepconfig(self, channel_configs: list, initial_wait: float, sweep_time: float) ->None:
         """
-        This function sets the sweep configuration for MClockin. It can set the parameter cofiguration for multiple channels.
+        This function sets the sweep configuration for MClockin for sweeping in multiple channels. It sets the parameter cofiguration for multiple channels.
+        This type of sweep in multiple channels is called as 1-dimensional sweep.
         Args:
-            channel_configs: A list contains all the parameter values for mulitple channels. The parameters are
-            start sweep voltage, stop sweep voltage, sweep time, and the sweeping pattern.
-        This type of sweeps is called as "1-dimensional sweeps".
-            """
+            channel_configs: A list contains all the parameter values for mulitple channels. The parameters are 
+            start sweep voltage, stop sweep voltage, sweep time, and the sweeping pattern. 
+        """
         channel_configs_list = []
         for channel in channel_configs:
             channel_configs_list.append({
@@ -360,6 +364,9 @@ class MCLockin(ZMQInstrument):
         self._send_command('setsweep',param)
 
     def _sweep_process(self) -> None:
+        """
+        This function processes a sweep for a particular sweep configuration.
+        """
         self._set_state('start sweep')
         self._sweep_yet_starting()
         self._sweep_checking()
@@ -417,12 +424,6 @@ class MCLockin(ZMQInstrument):
         print(param)
         self._send_command('setREF',param)
 
-    def _set_sampling_mode(self, mode: str) -> None:
-        '''
-        
-        '''
-        param = mode
-        self._send_command('setSamplingMode', param)
 
     def _set_sampling(self, FS: float, s: float) -> None:
         """
@@ -457,7 +458,7 @@ class MCLockin(ZMQInstrument):
 
     def _set_REF_RollOff(self, REFch: float, RollOff: float) -> None:
         """
-        This function will set the value for Order of a reference channel by the parameters- REFch and Roll-Off.
+        This function will set the value for the Order parameter of a reference channel by the parameters- REFch and Roll-Off.
         REFch specifies the channel no. and Roll-Off specifies the order value.
         """
         param = {'REF Channel': REFch, 'Roll-Off':RollOff}
@@ -466,7 +467,7 @@ class MCLockin(ZMQInstrument):
 
     def _data_sweepX1(self) -> None:
         """
-        This function will give the sweep X data after the sweep is completed.
+        This function will give the sweep results X (V) data after the sweep is completed.
         """
         data = self._get_sweep_data()
         x_array = [entry['Y'] for entry in data['result']['X_wfm']]
