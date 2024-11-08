@@ -92,7 +92,7 @@ ax.scatter(x3, y3, z3, c='b', marker = '*')
 ax.scatter(x4, y4, z4, c='g', marker = '*')
 
 ax.set_xlabel('Samples')
-ax.set_ylabel('AI1')
+ax.set_ylabel('Drain current')
 ax.set_zlabel('Magnetic field')
 
 plt.show()
