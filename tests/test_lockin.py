@@ -97,7 +97,19 @@ ax.set_zlabel('Magnetic field')
 
 plt.show()
 
-#%% Intensity plotting
+#%%Demonstration sweep
+x = lockin.sweep(2,0,0.1,"Ramp /",5,6,1) 
+print(x[2])
+
+
+#%% Demonstration multisweep
+sweep_config = [[1,0.08,0.15,"Ramp /"],
+                [2,0.04,0.10,"Smooth Ramp _/"],
+                [3,0.09,0.17,"Table",[1,3,5,7]],
+                [4,0.05,0.20,"Smooth Ramp _/"]]
+
+x = lockin.multisweep(sweep_config,5,6,2)
+print(x[2])
 
 
 
