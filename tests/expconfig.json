@@ -15,10 +15,10 @@
         },
         {
             "channel": "2",
-            "gain": "1000x",
+            "gain": "10x",
             "input": "DIFF",
             "shunt": "50",
-            "couple": "AC",
+            "couple": "DC",
             "filter": "OFF"
         },
         {

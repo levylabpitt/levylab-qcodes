@@ -22,7 +22,6 @@ push_config_to_db()
 
 #%%
 kh._send_command("HELP")
-# TODO: Make functions for each API returned from the above method.
 
 # %%
 kh.set_all_channels(kh_config_info)
