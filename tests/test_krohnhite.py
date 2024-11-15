@@ -32,9 +32,10 @@ kh.get_all_channels()
 
 # %%
 kh.set_channel(2)
+# NOTE: This doesn't work currently. Should be fixed from IF side.
 
 # %%
-kh.get_channel(2)
+kh.get_channel(3)
 
 # %%
 print("Sending configuration:", kh_config_info)

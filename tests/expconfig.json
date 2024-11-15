@@ -6,21 +6,70 @@
     },
     "kh_config_info": [
         {
-            "channel": 1,
-            "gain": 1000,
-            "input": "SE+",
-            "shunt": 500,
-            "couple": "AC",
+            "channel": "1",
+            "gain": "10x",
+            "input": "DIFF",
+            "shunt": "50k",
+            "couple": "DC",
             "filter": "ON"
         },
         {
-            "channel": 2,
-            "gain": 100,
+            "channel": "2",
+            "gain": "100x",
             "input": "DIFF",
-            "shunt": 50,
+            "shunt": "50",
+            "couple": "DC",
+            "filter": "OFF"
+        },
+        {
+            "channel": "3",
+            "gain": "1000x",
+            "input": "DIFF",
+            "shunt": "50",
+            "couple": "AC",
+            "filter": "OFF"
+        },
+        {
+            "channel": "4",
+            "gain": "10x",
+            "input": "DIFF",
+            "shunt": "50",
+            "couple": "DC",
+            "filter": "OFF"
+        },
+        {
+            "channel": "5",
+            "gain": "100x",
+            "input": "DIFF",
+            "shunt": "50",
+            "couple": "DC",
+            "filter": "OFF"
+        },
+        {
+            "channel": "6",
+            "gain": "1000x",
+            "input": "DIFF",
+            "shunt": "50",
+            "couple": "DC",
+            "filter": "OFF"
+        },
+        {
+            "channel": "7",
+            "gain": "10x",
+            "input": "DIFF",
+            "shunt": "50",
+            "couple": "DC",
+            "filter": "OFF"
+        },
+        {
+            "channel": "8",
+            "gain": "100x",
+            "input": "DIFF",
+            "shunt": "500",
             "couple": "DC",
             "filter": "OFF"
         }
+
     ],
     "wirebonding_info": "Details about wirebonding ...",
     "experiment_note_info": "Details on experiment, like user name, sample name, date, etc..."

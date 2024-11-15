@@ -8,13 +8,12 @@ import qcodes.validators as vals
 
 class KrohnHite(ZMQInstrument):
     """
-    Class to represent the Krohn-Hite amplifier in the LevyLab Instrument Framework.
-    This driver talks to the amplifier via ZMQ.
-
+    Represents the Krohn-Hite amplifier in the LevyLab Instrument Framework, using ZMQ communication.
+    
     Args:
-        name: The name used internally by QCoDeS for this driver
+        name: Name used internally by QCoDeS for this driver.
         address: The ZMQ server address.
-        config: A dictionary of the channel configuration parameters for the amplifier
+        config: Dictionary of the channel configuration parameters for the amplifier.
     """
 
     def __init__(self, name: str, address: str, config: dict, **kwargs: Any) -> None:
@@ -60,7 +59,7 @@ class KrohnHite(ZMQInstrument):
     
     def reload_config(self, new_config):
         """
-        Reload the configuration and update channels.
+        Reloads the configuration and updates channels.
         """
         try:
             existing_channels = {ch['channel'] for ch in self.config['kh_config_info']}
@@ -178,13 +177,13 @@ class KrohnHite(ZMQInstrument):
         """
         # Construct the parameters  for getting the channel config
         params = {
-            "channel": channel_number
-        }
+            "channel": str(channel_number)
+                            }
 
         response = self._send_command("getChannel", params)
 
         # Return the result (channel configuration) from the response
-        return response.get('result', {})
+        return response.get('result')
     
     def get_idn(self) -> dict[str, Optional[str]]:
         idn_info = super().get_idn()  # Reuse the parent method
