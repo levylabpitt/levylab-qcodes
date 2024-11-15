@@ -35,7 +35,10 @@ kh.set_channel(2)
 # NOTE: This doesn't work currently. Should be fixed from IF side.
 
 # %%
-kh.get_channel(3)
+kh.set_channel(2, gain="100x", input_mode="SE+", shunt="500", couple="AC", filter_mode="ON")
+
+# %%
+kh.get_channel(2)
 
 # %%
 print("Sending configuration:", kh_config_info)

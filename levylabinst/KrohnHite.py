@@ -143,25 +143,36 @@ class KrohnHite(ZMQInstrument):
         print("Raw response from getAllChannels:", response)
         return response.get('result', [])
     
-    def set_channel(self, channel_number: int) -> Dict:
+    def set_channel(self, channel_number: int, gain: Optional[str] = None, input_mode: Optional[str] = None,
+                shunt: Optional[str] = None, couple: Optional[str] = None, filter_mode: Optional[str] = None) -> Dict:
         """
         Set the configuration for a specific channel.
-        The channel number is provided, and the function retrieves the config from kh_config_info.
+        The user can either provide all values or just the channel number, and the values will be fetched from the configuration.
         """
-        # Find the configuration for the specific channel
-        channel_config = next((ch for ch in self.config['kh_config_info'] if ch['channel'] == channel_number), None)
+        # Ensure channel_number matches string keys
+        channel_config = next(
+            (ch for ch in self.config['kh_config_info'] if str(ch['channel']) == str(channel_number)),
+            None
+        )
 
         if channel_config is None:
             raise ValueError(f"Channel {channel_number} configuration not found.")
 
-        # Extract the channel parameters
+        # If parameters are not provided, use the configuration values
+        gain = gain or channel_config['gain']
+        input_mode = input_mode or channel_config['input']
+        shunt = shunt or channel_config['shunt']
+        couple = couple or channel_config['couple']
+        filter_mode = filter_mode or channel_config['filter']
+
+        # Construct the parameters to send
         params = {
-            "channel": channel_config['channel'],
-            "gain": channel_config['gain'],
-            "input": channel_config['input'],
-            "shunt": channel_config['shunt'],
-            "couple": channel_config['couple'],
-            "filter": channel_config['filter']
+            "channel": int(channel_config['channel']),  # Ensure channel number is sent as an integer
+            "gain": gain,
+            "input": input_mode,
+            "shunt": shunt,
+            "couple": couple,
+            "filter": filter_mode
         }
 
         # Send the command via ZMQ
@@ -169,6 +180,35 @@ class KrohnHite(ZMQInstrument):
         response = self._send_command("setChannel", params)
         print(f"Response from simulator/device: {response}")
         return response
+
+
+
+    #def set_channely(self, channel_number: int) -> Dict:
+    #    """
+    #    Set the configuration for a specific channel.
+    #    The channel number is provided, and the function retrieves the config from kh_config_info.
+    #    """
+        # Find the configuration for the specific channel
+    #    channel_config = next((ch for ch in self.config['kh_config_info'] if ch['channel'] == channel_number), None)
+
+    #    if channel_config is None:
+    #        raise ValueError(f"Channel {channel_number} configuration not found.")
+
+        # Extract the channel parameters
+    #    params = {
+    #        "channel": channel_config['channel'],
+    #        "gain": channel_config['gain'],
+    #        "input": channel_config['input'],
+    #        "shunt": channel_config['shunt'],
+    #        "couple": channel_config['couple'],
+    #        "filter": channel_config['filter']
+    #    }
+
+        # Send the command via ZMQ
+    #    print(f"Sending ZMQ command to set channel {channel_number} with configuration: {params}")
+    #    response = self._send_command("setChannel", params)
+    #    print(f"Response from simulator/device: {response}")
+    #    return response
     
     def get_channel(self, channel_number: int) -> dict:
         """
