@@ -287,10 +287,11 @@ class MCLockin(ZMQInstrument):
     def _data_extraction(self, extract_channel=None):
         """
         This function will extract the sweep data of a particular output channel given by the extract_channel parameter.
-        By default, the extract_channel parameter is set to None which corresponds to extraction of the sweep data of all
-        output channels. This function returns a general outoput array containing the sweep AI, sweep AO, sweeping results X(V) & 
-        sweeping results Y(V) arrays. So, the sweep AI array, the sweep AO array, the sweeping results X(V) array & the sweeping results Y(V)
-        are the 0-index, 1-index, 2-index & 3-index elements respectively of the general output array. 
+        By default, the extract_channel parameter is set to "None" which corresponds to extraction of the sweep data of all
+        output channels. If the extract_channel has a particular channel number, the data extraction will only happen for that channel.
+        This function returns a general outoput array containing the sweep AI, sweep AO, sweeping results X(V) & 
+        sweeping results Y(V) arrays for all channels. So, the sweep AI array, the sweep AO array, the sweeping results X(V) array & the sweeping results Y(V)
+        are the 0-index, 1-index, 2-index & 3-index elements respectively of the general output array.  
         """
         data = self._get_sweep_data()
         ai_array = [entry['Y'] for entry in data['result']['AI_wfm']]
@@ -318,6 +319,13 @@ class MCLockin(ZMQInstrument):
             stop: The stop time of the sweep
             sweep_time: The time of the sweep
             pattern: The pattern of the sweep
+        caution:
+        If the parameter values are not properly inserted, the MCLockin
+        will shut down automatically. For example, If any user mistakenly insert "Ramping /"
+        instead of "Ramp /" for the pattern parameter, the app will shut down. So the parameter
+        values must be inserted correctly when using this function. Still, if you accidentally
+        give a wrong parameter value and the app shuts down, you need to restart MClockin again.
+
         '''
         param = {"Sweep Time (s)":sweep_time,
                  "Initial Wait (s)":initial_wait,
@@ -369,7 +377,7 @@ class MCLockin(ZMQInstrument):
 
     def sweep(self, channel: int, start: float, stop: float, pattern: str, initial_wait: float, sweep_time: float, extract: float) -> None:
         """
-        This function perfoms a single sweep in one channel of MClockin. This function returns a general outoput array containing the sweep AI, sweep AO, sweeping results X(V) & 
+        This function perfoms a single sweep in one channel of MClockin. This function returns a general output array containing the sweep AI, sweep AO, sweeping results X(V) & 
         sweeping results Y(V) arrays. So, the sweep AI array, the sweep AO array, the sweeping results X(V) array & the sweeping results Y(V)
         are the 0-index, 1-index, 2-index & 3-index elements respectively of the general output array.
         Args:
@@ -379,7 +387,15 @@ class MCLockin(ZMQInstrument):
         pattern: The pattern of the sweep
         initial_wait: wait time before sweeping starts
         sweep_time: The time of the sweep
-        extract: output channel no. 
+        extract: output channel no. (To get 
+        data for all channels, use default
+        value "None".)
+        Caution:
+        If the parameter values are not properly inserted, the MCLockin
+        will shut down automatically. For example, If any user mistakenly insert "Ramping /"
+        instead of "Ramp /" for the pattern parameter, the app will shut down. So the parameter
+        values must be inserted correctly when using this function. Still, if you accidentally
+        give a wrong parameter value and the app shuts down, you need to restart MClockin again.
          
         """
         self._set_sweepconfig(channel, start, stop, pattern, initial_wait, sweep_time)
@@ -397,7 +413,16 @@ class MCLockin(ZMQInstrument):
         channel_configs: The values of parameters in multiple channels to set the sweep configuration
         initial_wait: wait time before sweeping starts
         sweep_time: The time of the sweep
-        extract: output channel no.    
+        extract: output channel no. (To get 
+        data for all channels, use default
+        value "None".)
+        Caution:
+        If the parameter values are not properly inserted, the MCLockin
+        will shut down automatically. For example, If any user mistakenly insert "Ramping /"
+        instead of "Ramp /" for the pattern parameter, the app will shut down. So the parameter
+        values must be inserted correctly when using this function. Still, if you accidentally
+        give a wrong parameter value and the app shuts down, you need to restart MClockin again.
+           
         """
         self._set_1dsweepconfig(channel_configs,initial_wait,sweep_time)
         self._sweep_process()
@@ -407,8 +432,12 @@ class MCLockin(ZMQInstrument):
     def _reference(self, ref_configs: list) -> None:
         """
         This function set the parameter values of mulitple reference channels for MCLockin.
-        Args: ref_configs contains all the parameters of a reference channel.
+        Args: 
+        ref_configs contains all the parameters of a reference channel.
         The parameters are Channel no., Frequency, Phase, TC and Roll-Off.
+        Info:
+        To change the Frequency parameter, the user must uncheck the "Link Frequencies" box in MCLockin.
+        Otherwise, the frequency parameter value will not be updated with its new value.
         """
         ref_configs_list = []
 
