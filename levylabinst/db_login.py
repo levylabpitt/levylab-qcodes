@@ -14,7 +14,7 @@ class LocalDB_Login:
                             'port': 5433,
                             'database': 'postgres',
                             'user': username,
-                            'password': 'flex'
+                            'password': 'postgres'
         # TODO: Password should come from a config file. Should not be hardcoded.
         
                         }
