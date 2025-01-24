@@ -18,12 +18,11 @@ from typing import Any, Dict
 
 class MCLockin(ZMQInstrument):
     """
-    Class to represent the Multichannel Lock-in in LevyLab Instrument Framework
+    Class to represent the Multichannel Lock-in in LevyLab Instrument Framework.
     This is a child class of ZMQInstrument, which is a child class of Instrument.
-
     This driver talks to the PPMS Monitor and Control software via ZMQ.
 
-    Args:
+    Arguments:
         name: The name used internally by QCoDeS for this driver
         address: The ZMQ server address.
             E.g. 'tcp://localhost:29170' for the MC Lock-in
@@ -192,35 +191,41 @@ class MCLockin(ZMQInstrument):
 
     def _set_amplitude(self, channel: int, value: float) -> None:
         """
-        This function will set the amplitude value of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the amplitude value.
+        This function will set the amplitude value of the associated output channel. 
+        The channel parameter corresponds to the channel no. and the value parameter corresponds to the amplitude value.
         """
         param = {'AO Channel': channel, 'Amplitude (V)': value}
         self._send_command('setAO_Amplitude', param)
 
     def _set_dc(self, channel: int, value: float) -> None:
         """
-        This function will set the dc value of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the dc value.
+        This function will set the dc value of the associated output channel. 
+        The channel parameter corresponds to the channel no. and the value parameter corresponds to the dc value.
         """
         param = {'AO Channel': channel, 'DC (V)': value}
         self._send_command('setAO_DC', param)
 
     def _set_freq(self, channel: int, value: float) -> None:
         """
-        This function will set the frequency value of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the frequency value.
+        This function will set the frequency value of the associated output channel. 
+        The channel parameter corresponds to the channel no. and the value parameter corresponds to the frequency value.
         """
         param = {'AO Channel': channel, 'Frequency (Hz)': value}
         self._send_command('setAO_Frequency', param)
 
     def _set_phase(self, channel: int, value: float) -> None:
         """
-        This function will set the phase value of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the phase value.
+        This function will set the phase value of the associated output channel. 
+        The channel parameter corresponds to the channel no. and the value parameter corresponds to the phase value.
         """
         param = {'AO Channel': channel, 'Phase (deg)': value}
         self._send_command('setAO_Phase', param)
 
     def _set_func(self, channel: int, value: str) -> None:
         """
-        This function will set the function type of the associated output channel. The channel parameter corresponds to the channel no. and the value parameter corresponds to the function type.
+        This function will set the function type of the associated output channel. 
+        The channel parameter corresponds to the channel no. and the value parameter corresponds to the function type.
+        
         Caution:
         If the function type is inserted incorrectly (E.g.- "Sin" instead of "Sine"), the Multichannel Lockin will shut down.
         """
@@ -229,7 +234,7 @@ class MCLockin(ZMQInstrument):
     
     def _get_lockin(self, value: str, channel: int) -> float:
         """
-        This function has the general structure for making any get function.
+        This function has the general structure for making any getter function.
         """
         key = f"AI{channel}.Ref{self._ref_channel}.{value}"
         response = self._send_command('getResults')
@@ -445,7 +450,7 @@ class MCLockin(ZMQInstrument):
         This function set the parameter values of mulitple reference channels for MCLockin.
 
         Arguments: 
-        ref_configs contains all the parameters of a reference channel.
+        ref_configs: A list contains all the parameters of a reference channel.
         The parameters are Channel no., Frequency, Phase, TC and Roll-Off.
 
         Info:
