@@ -241,6 +241,7 @@ class MCLockin(ZMQInstrument):
         results = response['result']['Results (Dictionary)']
         results_dict = {item['key']: item['value'] for item in results}
         return results_dict.get(key)
+        
     
     def _get_sweep_data(self) -> dict: 
         """
@@ -255,6 +256,9 @@ class MCLockin(ZMQInstrument):
         """
         response = self._send_command('getState')
         return response['result']
+    
+
+
     
     def _set_state(self, value: str) -> None:
         """
@@ -276,6 +280,12 @@ class MCLockin(ZMQInstrument):
         """
         response = self._send_command('getAOconfig')
         return response
+    
+    def _get_AO_param(self,param: str, channel: int) -> None:
+        response = self._get_AO()
+        data = response
+        parameter_channel_no = next(item[param] for item in data['result'] if item['Channel']==channel)
+        return parameter_channel_no
 
     def _sweep_yet_starting(self) -> None:
         """
